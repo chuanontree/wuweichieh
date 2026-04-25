@@ -164,6 +164,109 @@ body.edit .drag-handle{display:flex}
 /* ── PAGE SECTIONS ───────────────────────────── */
 .ps{display:none}
 .ps.on{display:block}
+
+/* ── VIRTUAL GALLERY ─────────────────────────── */
+#pg-gallery{
+  padding:0;
+  position:relative;
+  height:calc(100vh - 52px);
+  overflow:hidden;
+  background:#000;
+}
+#galleryCanvas{
+  display:block;
+  width:100%;height:100%;
+  cursor:grab;
+}
+#galleryCanvas.locked{cursor:none}
+#galleryHint{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  z-index:10;
+  background:rgba(9,9,9,.92);
+  backdrop-filter:blur(20px);
+  -webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--line);
+  padding:2.4rem 2.8rem;
+  text-align:center;
+  max-width:380px;
+  font-family:'Space Mono',monospace;
+  transition:opacity .35s ease,transform .35s ease;
+}
+#galleryHint.hidden{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.96)}
+#galleryHint h2{
+  font-size:.9rem;
+  font-weight:700;
+  letter-spacing:.34em;
+  color:var(--fg);
+  margin-bottom:.3rem;
+  text-transform:uppercase;
+}
+#galleryHint .sub{
+  font-size:.5rem;
+  letter-spacing:.32em;
+  color:var(--metal);
+  text-transform:uppercase;
+  margin-bottom:1.6rem;
+  opacity:.7;
+}
+#galleryHint .controls{
+  font-size:.62rem;
+  letter-spacing:.18em;
+  color:var(--fg);
+  line-height:2;
+  margin-bottom:1.6rem;
+  text-transform:uppercase;
+}
+#galleryHint .controls span{
+  display:inline-block;
+  background:var(--dim);
+  border:1px solid var(--line);
+  color:var(--accent);
+  padding:1px 8px;
+  font-size:.58rem;
+  letter-spacing:.1em;
+  margin:0 2px;
+}
+#galleryHint button{
+  font-family:'Space Mono',monospace;
+  font-size:.55rem;
+  letter-spacing:.3em;
+  text-transform:uppercase;
+  font-weight:700;
+  background:transparent;
+  color:var(--accent);
+  border:1px solid var(--accent);
+  padding:.7rem 1.6rem;
+  cursor:pointer;
+  transition:all .22s ease;
+}
+#galleryHint button:hover{
+  background:var(--accent);
+  color:var(--bg);
+}
+#galleryHud{
+  position:absolute;bottom:1.2rem;right:1.2rem;z-index:8;
+  font-family:'Space Mono',monospace;
+  font-size:.5rem;
+  letter-spacing:.22em;
+  color:var(--metal);
+  text-transform:uppercase;
+  background:rgba(9,9,9,.6);
+  backdrop-filter:blur(10px);
+  border:1px solid var(--line);
+  padding:.55rem .85rem;
+  display:none;
+}
+#galleryHud.show{display:block}
+#galleryHud kbd{
+  background:var(--dim);
+  border:1px solid var(--line);
+  color:var(--accent);
+  padding:1px 5px;
+  font-family:'Space Mono',monospace;
+  margin:0 2px;
+}
 </style>
   <script async src="//www.instagram.com/embed.js"></script>
 </head>
@@ -179,6 +282,7 @@ body.edit .drag-handle{display:flex}
     <button class="ni on" onclick="pg('works',this)">Works</button>
     <button class="ni" onclick="pg('about',this)">About</button>
     <button class="ni" onclick="pg('cv',this)">CV</button>
+    <button class="ni" onclick="pg('gallery',this)">Gallery</button>
     <button id="editBtn" onclick="toggleEdit()">Edit</button>
   </nav>
 </header>
@@ -997,6 +1101,25 @@ body.edit .drag-handle{display:flex}
   </div>
 </div>
 
+<!-- ══ VIRTUAL GALLERY PAGE ═══════════════════════ -->
+<div id="pg-gallery" class="ps">
+  <canvas id="galleryCanvas"></canvas>
+
+  <div id="galleryHint">
+    <h2>VIRTUAL GALLERY</h2>
+    <div class="sub">— 虛擬展廳 —</div>
+    <div class="controls">
+      移動 <span>W</span><span>A</span><span>S</span><span>D</span><br>
+      視角 <span>Mouse</span> &nbsp;·&nbsp; 退出 <span>Esc</span>
+    </div>
+    <button onclick="enterGallery()">進入展廳</button>
+  </div>
+
+  <div id="galleryHud">
+    <kbd>WASD</kbd> Move &nbsp;·&nbsp; <kbd>Mouse</kbd> Look &nbsp;·&nbsp; <kbd>Esc</kbd> Exit
+  </div>
+</div>
+
 <footer>
   <span>© 2025 武威桀 WWC STUDIO</span>
   <a href="/cdn-cgi/l/email-protection#f091828488878793b0979d91999cde939f9d"><span class="__cf_email__" data-cfemail="ceafbcbab6b9b9ad8ea9a3afa7a2e0ada1a3">[email&#160;protected]</span></a>
@@ -1440,5 +1563,396 @@ obsFi();
   }
 })();
 </script>
+
+<!-- ══ THREE.JS VIRTUAL GALLERY ═══════════════════════ -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.161.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+let scene, camera, renderer, controls;
+let envMap;
+let velocity, direction;
+let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+let pedestals = [];
+let prevTime = performance.now();
+let initialized = false;
+
+const HEADER_H = 52;
+const GALLERY = {
+  width: 24,
+  depth: 32,
+  height: 5.5,
+  pedestalCount: 6,
+};
+
+// 公開 API：之後從 Google Drive 載入模型用
+window.galleryAPI = {
+  loadGLBFromURL(url, pedestalIndex = 0, options = {}) {
+    if (!initialized) return console.warn('Gallery not initialized');
+    new GLTFLoader().load(url, (gltf) => {
+      placeOnPedestal(gltf.scene, pedestalIndex, options);
+    }, undefined, (err) => console.error('GLB load error:', err));
+  },
+  loadSTLFromURL(url, pedestalIndex = 0, options = {}) {
+    if (!initialized) return console.warn('Gallery not initialized');
+    new STLLoader().load(url, (geometry) => {
+      const material = new THREE.MeshPhysicalMaterial({
+        color: options.color || 0xc0b89a,
+        metalness: 0.4,
+        roughness: 0.35,
+        clearcoat: 0.3,
+        envMap,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      placeOnPedestal(mesh, pedestalIndex, options);
+    }, undefined, (err) => console.error('STL load error:', err));
+  },
+  // 之後接 Google Drive：galleryAPI.loadFromGoogleDrive('FILE_ID', 0, { type: 'glb' })
+  loadFromGoogleDrive(fileId, pedestalIndex = 0, options = {}) {
+    const url = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    if (options.type === 'stl') this.loadSTLFromURL(url, pedestalIndex, options);
+    else this.loadGLBFromURL(url, pedestalIndex, options);
+  },
+  clearPedestal(index) {
+    const ped = pedestals[index];
+    if (ped && ped.userData.artwork) {
+      ped.remove(ped.userData.artwork);
+      ped.userData.artwork = null;
+    }
+  }
+};
+
+function placeOnPedestal(object, pedestalIndex, options = {}) {
+  const ped = pedestals[pedestalIndex];
+  if (!ped) return console.warn('Pedestal index out of range:', pedestalIndex);
+  if (ped.userData.artwork) ped.remove(ped.userData.artwork);
+
+  const box = new THREE.Box3().setFromObject(object);
+  const size = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxDim = Math.max(size.x, size.y, size.z);
+  const targetSize = options.size || 1.2;
+  const scale = targetSize / maxDim;
+
+  const wrapper = new THREE.Group();
+  object.position.sub(center).multiplyScalar(scale);
+  object.scale.setScalar(scale);
+  if (object.geometry && object.geometry.type === 'BufferGeometry') {
+    object.rotation.x = -Math.PI / 2;  // STL 預設躺著，扶正
+  }
+  wrapper.add(object);
+  wrapper.position.y = 1.2 + (size.y * scale) / 2;
+  ped.add(wrapper);
+  ped.userData.artwork = wrapper;
+
+  object.traverse?.((c) => {
+    if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
+  });
+}
+
+function buildPedestal(x, z) {
+  const group = new THREE.Group();
+  group.position.set(x, 0, z);
+
+  // 底座
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.55, 0.6, 1.1, 32, 1),
+    new THREE.MeshPhysicalMaterial({
+      color: 0x1a1a1a,
+      roughness: 0.4,
+      metalness: 0.05,
+      clearcoat: 0.4,
+      envMap,
+    })
+  );
+  base.position.y = 0.55;
+  base.castShadow = true;
+  base.receiveShadow = true;
+  group.add(base);
+
+  // 頂飾金屬圈
+  const trimMat = new THREE.MeshPhysicalMaterial({
+    color: 0xc0b89a, metalness: 0.9, roughness: 0.3, envMap,
+  });
+  const trim = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.02, 16, 64), trimMat);
+  trim.position.y = 1.1;
+  trim.rotation.x = Math.PI / 2;
+  group.add(trim);
+  const trim2 = trim.clone();
+  trim2.position.y = 0.05;
+  group.add(trim2);
+
+  // 射燈
+  const spot = new THREE.SpotLight(0xfff0d8, 5, 8, Math.PI / 7, 0.5, 1.6);
+  spot.position.set(0, 4, 0);
+  spot.target = base;
+  spot.castShadow = true;
+  spot.shadow.mapSize.set(1024, 1024);
+  spot.shadow.bias = -0.0005;
+  group.add(spot);
+  group.add(spot.target);
+
+  return group;
+}
+
+function buildGallery() {
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x070707);
+  scene.fog = new THREE.FogExp2(0x070707, 0.022);
+
+  camera = new THREE.PerspectiveCamera(72, window.innerWidth / (window.innerHeight - HEADER_H), 0.05, 100);
+  camera.position.set(0, 1.65, GALLERY.depth / 2 - 2);
+
+  const canvas = document.getElementById('galleryCanvas');
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(window.innerWidth, window.innerHeight - HEADER_H, false);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  envMap = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+  scene.environment = envMap;
+
+  // 地板
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(GALLERY.width, GALLERY.depth),
+    new THREE.MeshPhysicalMaterial({
+      color: 0x14110d,
+      roughness: 0.25,
+      metalness: 0.0,
+      clearcoat: 0.5,
+      clearcoatRoughness: 0.4,
+      envMap,
+    })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // 牆壁
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 0.85 });
+  const ceilMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.95 });
+
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(GALLERY.width, GALLERY.height), wallMat);
+  back.position.set(0, GALLERY.height / 2, -GALLERY.depth / 2);
+  back.receiveShadow = true; scene.add(back);
+
+  const front = back.clone();
+  front.position.z = GALLERY.depth / 2;
+  front.rotation.y = Math.PI; scene.add(front);
+
+  const left = new THREE.Mesh(new THREE.PlaneGeometry(GALLERY.depth, GALLERY.height), wallMat);
+  left.position.set(-GALLERY.width / 2, GALLERY.height / 2, 0);
+  left.rotation.y = Math.PI / 2;
+  left.receiveShadow = true; scene.add(left);
+
+  const right = left.clone();
+  right.position.x = GALLERY.width / 2;
+  right.rotation.y = -Math.PI / 2; scene.add(right);
+
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(GALLERY.width, GALLERY.depth), ceilMat);
+  ceil.position.y = GALLERY.height;
+  ceil.rotation.x = Math.PI / 2; scene.add(ceil);
+
+  // 牆腳/牆頂金屬細線
+  const trimMat = new THREE.MeshPhysicalMaterial({
+    color: 0xc0b89a, metalness: 0.85, roughness: 0.35, envMap,
+  });
+  const trims = [
+    { w: GALLERY.width, x: 0, z: -GALLERY.depth/2 + 0.01 },
+    { w: GALLERY.width, x: 0, z: GALLERY.depth/2 - 0.01 },
+    { w: GALLERY.depth, x: -GALLERY.width/2 + 0.01, z: 0, ry: Math.PI/2 },
+    { w: GALLERY.depth, x: GALLERY.width/2 - 0.01, z: 0, ry: Math.PI/2 },
+  ];
+  trims.forEach(t => {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(t.w, 0.05, 0.03), trimMat);
+    m.position.set(t.x, 0.05, t.z);
+    if (t.ry) m.rotation.y = t.ry;
+    scene.add(m);
+    const top = m.clone();
+    top.position.y = GALLERY.height - 0.05;
+    scene.add(top);
+  });
+
+  // 環境光
+  scene.add(new THREE.AmbientLight(0xfff4e0, 0.18));
+  scene.add(new THREE.HemisphereLight(0xfff4e0, 0x101010, 0.32));
+
+  // 主吊燈
+  const mainLight = new THREE.PointLight(0xfff4d0, 28, 26, 1.8);
+  mainLight.position.set(0, GALLERY.height - 0.4, 0);
+  mainLight.castShadow = true;
+  mainLight.shadow.mapSize.set(1024, 1024);
+  scene.add(mainLight);
+
+  const chandelier = new THREE.Mesh(
+    new THREE.SphereGeometry(0.18, 16, 12),
+    new THREE.MeshStandardMaterial({ color: 0xfff4d0, emissive: 0xfff4d0, emissiveIntensity: 1.6 })
+  );
+  chandelier.position.copy(mainLight.position);
+  scene.add(chandelier);
+
+  // 基座（環形排佈 6 個）
+  pedestals = [];
+  const radius = Math.min(GALLERY.width, GALLERY.depth) * 0.32;
+  const placeholderColors = [0xc0b89a, 0xa0988a, 0x8a8275, 0xb0a890, 0x968d7a, 0xc8c0a0];
+  for (let i = 0; i < GALLERY.pedestalCount; i++) {
+    const angle = (i / GALLERY.pedestalCount) * Math.PI * 2 + Math.PI / 2;
+    const x = Math.cos(angle) * radius;
+    const z = Math.sin(angle) * radius;
+    const ped = buildPedestal(x, z);
+    pedestals.push(ped);
+    scene.add(ped);
+
+    // 預設佔位球（之後 loadFromGoogleDrive 會替換掉）
+    const placeholder = new THREE.Mesh(
+      new THREE.SphereGeometry(0.42, 32, 24),
+      new THREE.MeshPhysicalMaterial({
+        color: placeholderColors[i],
+        roughness: 0.35,
+        metalness: 0.15,
+        clearcoat: 0.4,
+        envMap,
+      })
+    );
+    placeholder.position.y = 1.7;
+    placeholder.castShadow = true;
+    placeholder.receiveShadow = true;
+    ped.add(placeholder);
+    ped.userData.artwork = placeholder;
+  }
+
+  // 控制器
+  controls = new PointerLockControls(camera, document.body);
+  controls.addEventListener('lock', () => {
+    document.getElementById('galleryHint').classList.add('hidden');
+    document.getElementById('galleryHud').classList.add('show');
+    document.getElementById('galleryCanvas').classList.add('locked');
+  });
+  controls.addEventListener('unlock', () => {
+    document.getElementById('galleryHint').classList.remove('hidden');
+    document.getElementById('galleryHud').classList.remove('show');
+    document.getElementById('galleryCanvas').classList.remove('locked');
+  });
+
+  velocity = new THREE.Vector3();
+  direction = new THREE.Vector3();
+
+  document.addEventListener('keydown', onGalleryKeyDown);
+  document.addEventListener('keyup', onGalleryKeyUp);
+  window.addEventListener('resize', onGalleryResize);
+
+  initialized = true;
+  animate();
+}
+
+function onGalleryKeyDown(e) {
+  if (!document.getElementById('pg-gallery').classList.contains('on')) return;
+  switch (e.code) {
+    case 'KeyW': case 'ArrowUp':    moveForward = true; break;
+    case 'KeyS': case 'ArrowDown':  moveBackward = true; break;
+    case 'KeyA': case 'ArrowLeft':  moveLeft = true; break;
+    case 'KeyD': case 'ArrowRight': moveRight = true; break;
+  }
+}
+function onGalleryKeyUp(e) {
+  switch (e.code) {
+    case 'KeyW': case 'ArrowUp':    moveForward = false; break;
+    case 'KeyS': case 'ArrowDown':  moveBackward = false; break;
+    case 'KeyA': case 'ArrowLeft':  moveLeft = false; break;
+    case 'KeyD': case 'ArrowRight': moveRight = false; break;
+  }
+}
+function onGalleryResize() {
+  if (!camera || !renderer) return;
+  camera.aspect = window.innerWidth / (window.innerHeight - HEADER_H);
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight - HEADER_H, false);
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const time = performance.now();
+  const delta = Math.min((time - prevTime) / 1000, 0.1);
+
+  velocity.x -= velocity.x * 8 * delta;
+  velocity.z -= velocity.z * 8 * delta;
+
+  direction.z = Number(moveForward) - Number(moveBackward);
+  direction.x = Number(moveRight) - Number(moveLeft);
+  direction.normalize();
+
+  const speed = 22;
+  if (controls && controls.isLocked) {
+    if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
+    if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
+    controls.moveRight(-velocity.x * delta);
+    controls.moveForward(-velocity.z * delta);
+
+    const cam = controls.getObject();
+    const m = 1.0;
+    cam.position.x = Math.max(-GALLERY.width/2 + m, Math.min(GALLERY.width/2 - m, cam.position.x));
+    cam.position.z = Math.max(-GALLERY.depth/2 + m, Math.min(GALLERY.depth/2 - m, cam.position.z));
+    cam.position.y = 1.65;
+  }
+
+  pedestals.forEach((p, i) => {
+    if (p.userData.artwork) {
+      p.userData.artwork.rotation.y += delta * 0.18 * (i % 2 === 0 ? 1 : -1);
+    }
+  });
+
+  prevTime = time;
+  if (renderer && scene && camera) renderer.render(scene, camera);
+}
+
+window.enterGallery = function() {
+  if (!initialized) buildGallery();
+  if (controls) controls.lock();
+};
+
+window.initGalleryIfNeeded = function() {
+  if (!initialized && document.getElementById('pg-gallery').classList.contains('on')) {
+    buildGallery();
+    onGalleryResize();
+  } else if (initialized) {
+    onGalleryResize();
+  }
+};
+</script>
+
+<!-- 串接原本的 pg() 函數 — 切換到 gallery 時觸發初始化 -->
+<script>
+(function(){
+  const _pg = window.pg;
+  if (!_pg) return;
+  window.pg = function(name, btn){
+    _pg(name, btn);
+    if (name === 'gallery') {
+      const tryInit = () => {
+        if (window.initGalleryIfNeeded) window.initGalleryIfNeeded();
+        else setTimeout(tryInit, 60);
+      };
+      tryInit();
+    }
+  };
+})();
+</script>
+
 </body>
 </html>
