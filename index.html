@@ -179,98 +179,267 @@ body.edit .drag-handle{display:flex}
   cursor:grab;
 }
 #galleryCanvas.locked{cursor:none}
+
+/* ═══ iOS 26 LIQUID GLASS ═══════════════════════════════
+   設計：透明厚度玻璃、雙層 backdrop-filter、頂部反光、
+   內外邊雙線、SVG 折射、膠囊形按鈕
+   ═════════════════════════════════════════════════════ */
+
 #galleryHint{
   position:absolute;top:50%;left:50%;
   transform:translate(-50%,-50%);
   z-index:10;
-  background:rgba(9,9,9,.92);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  border:1px solid var(--line);
-  padding:2.4rem 2.8rem;
+  padding:2.4rem 2.6rem 2.2rem;
+  max-width:340px;
+  width:calc(100% - 3rem);
   text-align:center;
-  max-width:380px;
   font-family:'Space Mono',monospace;
+  /* 玻璃本體：高度模糊 + 飽和度提升 + 微亮 */
+  background:linear-gradient(
+    135deg,
+    rgba(255,255,255,.14) 0%,
+    rgba(255,255,255,.06) 45%,
+    rgba(255,255,255,.10) 100%);
+  backdrop-filter:blur(32px) saturate(180%) brightness(1.08);
+  -webkit-backdrop-filter:blur(32px) saturate(180%) brightness(1.08);
+  border-radius:32px;
+  /* 內外雙線：外圈高光、內圈微凹（玻璃厚度感） */
+  box-shadow:
+    0 0 0 .5px rgba(255,255,255,.4) inset,
+    0 0 0 1px rgba(0,0,0,.18),
+    0 1px 0 rgba(255,255,255,.5) inset,
+    0 -1px 0 rgba(0,0,0,.25) inset,
+    0 30px 80px -20px rgba(0,0,0,.55),
+    0 8px 24px -8px rgba(0,0,0,.4);
+  overflow:hidden;
+  isolation:isolate;
   transition:opacity .35s ease,transform .35s ease;
 }
-#galleryHint.hidden{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.96)}
+/* 頂部高光反射（玻璃最像玻璃的關鍵） */
+#galleryHint::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(
+    180deg,
+    rgba(255,255,255,.18) 0%,
+    rgba(255,255,255,.04) 35%,
+    transparent 55%,
+    rgba(255,255,255,.03) 100%);
+  pointer-events:none;
+  border-radius:inherit;
+  z-index:-1;
+}
+/* 邊緣微光（specular） */
+#galleryHint::after{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 20% 0%,rgba(255,255,255,.22) 0%,transparent 35%),
+    radial-gradient(ellipse at 80% 100%,rgba(255,255,255,.06) 0%,transparent 35%);
+  pointer-events:none;
+  mix-blend-mode:overlay;
+  border-radius:inherit;
+  z-index:-1;
+}
+#galleryHint.hidden{
+  opacity:0;pointer-events:none;
+  transform:translate(-50%,-50%) scale(.94);
+}
 #galleryHint h2{
-  font-size:.9rem;
+  font-size:1.05rem;
   font-weight:700;
-  letter-spacing:.34em;
-  color:var(--fg);
-  margin-bottom:.3rem;
+  letter-spacing:.32em;
+  color:rgba(255,255,255,.96);
+  margin:0 0 .4rem;
   text-transform:uppercase;
+  text-shadow:0 1px 12px rgba(0,0,0,.4);
 }
 #galleryHint .sub{
   font-size:.5rem;
-  letter-spacing:.32em;
-  color:var(--metal);
+  letter-spacing:.36em;
+  color:rgba(255,255,255,.55);
   text-transform:uppercase;
-  margin-bottom:1.6rem;
-  opacity:.7;
+  margin-bottom:1.8rem;
 }
 #galleryHint .controls{
   font-size:.62rem;
   letter-spacing:.18em;
-  color:var(--fg);
-  line-height:2;
-  margin-bottom:1.6rem;
+  color:rgba(255,255,255,.78);
+  line-height:2.1;
+  margin-bottom:1.8rem;
   text-transform:uppercase;
 }
 #galleryHint .controls span{
   display:inline-block;
-  background:var(--dim);
-  border:1px solid var(--line);
-  color:var(--accent);
-  padding:1px 8px;
-  font-size:.58rem;
-  letter-spacing:.1em;
+  background:rgba(255,255,255,.12);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border:.5px solid rgba(255,255,255,.25);
+  color:rgba(255,255,255,.92);
+  padding:2px 9px;
+  font-size:.55rem;
+  letter-spacing:.12em;
   margin:0 2px;
+  border-radius:6px;
+  box-shadow:
+    0 .5px 0 rgba(255,255,255,.3) inset,
+    0 1px 2px rgba(0,0,0,.18);
 }
 #galleryHint button{
   font-family:'Space Mono',monospace;
-  font-size:.55rem;
-  letter-spacing:.3em;
+  font-size:.6rem;
+  letter-spacing:.34em;
   text-transform:uppercase;
   font-weight:700;
-  background:transparent;
-  color:var(--accent);
-  border:1px solid var(--accent);
-  padding:.7rem 1.6rem;
+  color:rgba(255,255,255,.95);
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.18) 0%,
+    rgba(255,255,255,.08) 100%);
+  backdrop-filter:blur(20px) saturate(150%);
+  -webkit-backdrop-filter:blur(20px) saturate(150%);
+  border:.5px solid rgba(255,255,255,.32);
+  padding:.95rem 2rem;
   cursor:pointer;
-  transition:all .22s ease;
+  border-radius:999px;
+  position:relative;
+  overflow:hidden;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.4) inset,
+    0 -1px 0 rgba(0,0,0,.2) inset,
+    0 8px 18px -6px rgba(0,0,0,.4);
+  transition:all .25s cubic-bezier(.34,1.56,.64,1);
 }
 #galleryHint button:hover{
-  background:var(--accent);
-  color:var(--bg);
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.28) 0%,
+    rgba(255,255,255,.14) 100%);
+  border-color:rgba(255,255,255,.5);
+  transform:translateY(-1px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.5) inset,
+    0 -1px 0 rgba(0,0,0,.2) inset,
+    0 12px 28px -6px rgba(0,0,0,.5),
+    0 0 32px rgba(255,255,255,.18);
 }
+#galleryHint button:active{
+  transform:translateY(0);
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.1) 0%,
+    rgba(255,255,255,.06) 100%);
+}
+
+/* ═══ HUD（右下角控制提示）═══ */
 #galleryHud{
   position:absolute;bottom:1.2rem;right:1.2rem;z-index:8;
   font-family:'Space Mono',monospace;
   font-size:.5rem;
   letter-spacing:.22em;
-  color:var(--metal);
+  color:rgba(255,255,255,.85);
   text-transform:uppercase;
-  background:rgba(9,9,9,.6);
-  backdrop-filter:blur(10px);
-  border:1px solid var(--line);
-  padding:.55rem .85rem;
+  background:linear-gradient(135deg,
+    rgba(255,255,255,.14) 0%,
+    rgba(255,255,255,.06) 100%);
+  backdrop-filter:blur(24px) saturate(160%);
+  -webkit-backdrop-filter:blur(24px) saturate(160%);
+  border:.5px solid rgba(255,255,255,.22);
+  padding:.7rem 1rem;
+  border-radius:999px;
   display:none;
+  box-shadow:
+    0 .5px 0 rgba(255,255,255,.35) inset,
+    0 -.5px 0 rgba(0,0,0,.2) inset,
+    0 8px 18px -4px rgba(0,0,0,.4);
 }
 #galleryHud.show{display:block}
 #galleryHud kbd{
-  background:var(--dim);
-  border:1px solid var(--line);
-  color:var(--accent);
-  padding:1px 5px;
+  background:rgba(255,255,255,.16);
+  border:.5px solid rgba(255,255,255,.28);
+  color:rgba(255,255,255,.96);
+  padding:1px 6px;
   font-family:'Space Mono',monospace;
   margin:0 2px;
+  border-radius:4px;
+  box-shadow:0 .5px 0 rgba(255,255,255,.3) inset;
+}
+
+/* ═══ 點擊作品後的玻璃標籤 ═══ */
+#galleryLabel{
+  position:absolute;
+  bottom:3rem;left:50%;
+  transform:translate(-50%,20px);
+  z-index:9;
+  padding:1.2rem 2.2rem;
+  min-width:280px;
+  text-align:center;
+  font-family:'Space Mono',monospace;
+  background:linear-gradient(135deg,
+    rgba(255,255,255,.16) 0%,
+    rgba(255,255,255,.06) 50%,
+    rgba(255,255,255,.12) 100%);
+  backdrop-filter:blur(36px) saturate(180%) brightness(1.05);
+  -webkit-backdrop-filter:blur(36px) saturate(180%) brightness(1.05);
+  border:.5px solid rgba(255,255,255,.28);
+  border-radius:24px;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.4) inset,
+    0 -1px 0 rgba(0,0,0,.2) inset,
+    0 20px 50px -10px rgba(0,0,0,.55);
+  opacity:0;
+  pointer-events:none;
+  overflow:hidden;
+  isolation:isolate;
+  transition:opacity .4s ease,transform .4s cubic-bezier(.34,1.56,.64,1);
+}
+#galleryLabel::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.16) 0%,
+    transparent 50%);
+  pointer-events:none;
+  border-radius:inherit;
+  z-index:-1;
+}
+#galleryLabel.show{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+#galleryLabel .ll-title{
+  font-size:.82rem;
+  letter-spacing:.22em;
+  color:rgba(255,255,255,.98);
+  font-weight:700;
+  text-transform:uppercase;
+  margin-bottom:.4rem;
+  text-shadow:0 1px 8px rgba(0,0,0,.35);
+}
+#galleryLabel .ll-meta{
+  font-size:.5rem;
+  letter-spacing:.3em;
+  color:rgba(255,255,255,.68);
+  text-transform:uppercase;
+  margin-bottom:.55rem;
+}
+#galleryLabel .ll-hint{
+  font-size:.45rem;
+  letter-spacing:.26em;
+  color:rgba(255,255,255,.42);
+  text-transform:uppercase;
 }
 </style>
   <script async src="//www.instagram.com/embed.js"></script>
 </head>
 <body>
+
+<!-- ══ LIQUID GLASS FILTER (iOS 26 style) ═══════════════ -->
+<svg width="0" height="0" style="position:absolute;pointer-events:none" aria-hidden="true">
+  <defs>
+    <filter id="liquidGlass" x="0%" y="0%" width="100%" height="100%">
+      <!-- 1. 產生柔和的湍流位移圖 -->
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="3" result="noise"/>
+      <feGaussianBlur in="noise" stdDeviation="1.5" result="softNoise"/>
+      <!-- 2. 用位移圖扭曲背景，模擬玻璃折射（強度很弱，否則會看起來像水波） -->
+      <feDisplacementMap in="SourceGraphic" in2="softNoise" scale="6" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
 
 <!-- ══ HEADER ══════════════════════════════════ -->
 <header>
@@ -1106,17 +1275,25 @@ body.edit .drag-handle{display:flex}
   <canvas id="galleryCanvas"></canvas>
 
   <div id="galleryHint">
-    <h2>VIRTUAL GALLERY</h2>
-    <div class="sub">— 虛擬展廳 —</div>
+    <h2>COSMIC GALLERY</h2>
+    <div class="sub">— 太空漂浮展 —</div>
     <div class="controls">
-      移動 <span>W</span><span>A</span><span>S</span><span>D</span><br>
-      視角 <span>Mouse</span> &nbsp;·&nbsp; 退出 <span>Esc</span>
+      飛行 <span>W</span><span>A</span><span>S</span><span>D</span><br>
+      升降 <span>Space</span><span>Shift</span><br>
+      視角 <span>Mouse</span> &nbsp;·&nbsp; 點擊作品近觀<br>
+      退出 <span>Esc</span>
     </div>
-    <button onclick="enterGallery()">進入展廳</button>
+    <button onclick="enterGallery()">進入太空</button>
   </div>
 
   <div id="galleryHud">
-    <kbd>WASD</kbd> Move &nbsp;·&nbsp; <kbd>Mouse</kbd> Look &nbsp;·&nbsp; <kbd>Esc</kbd> Exit
+    <kbd>WASD</kbd> Fly &nbsp;·&nbsp; <kbd>Space</kbd>/<kbd>Shift</kbd> Up/Down &nbsp;·&nbsp; <kbd>Click</kbd> Focus &nbsp;·&nbsp; <kbd>Esc</kbd> Exit
+  </div>
+
+  <div id="galleryLabel">
+    <div class="ll-title"></div>
+    <div class="ll-meta"></div>
+    <div class="ll-hint">Click anywhere to release</div>
   </div>
 </div>
 
@@ -1564,7 +1741,8 @@ obsFi();
 })();
 </script>
 
-<!-- ══ THREE.JS VIRTUAL GALLERY ═══════════════════════ -->
+
+<!-- ══ THREE.JS COSMIC GALLERY ═══════════════════════ -->
 <script type="importmap">
 {
   "imports": {
@@ -1578,266 +1756,313 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 let scene, camera, renderer, controls;
 let envMap;
+let raycaster, mouse;
 let velocity, direction;
-let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-let pedestals = [];
+let moveForward=false, moveBackward=false, moveLeft=false, moveRight=false, moveUp=false, moveDown=false;
+let artworks = [];       // 所有可點擊作品 { group, mesh, name, meta, basePos, orbitPhase, orbitRadius, orbitSpeed, spinSpeed }
+let focusedArtwork = null;
+let focusTransition = null;  // { startPos, startQuat, endPos, endQuat, t, duration }
+let savedCamPos = null, savedCamQuat = null;
 let prevTime = performance.now();
 let initialized = false;
+let rafId = null;
 
 const HEADER_H = 52;
-const GALLERY = {
-  width: 24,
-  depth: 32,
-  height: 5.5,
-  pedestalCount: 6,
-};
 
-// 公開 API：之後從 Google Drive 載入模型用
+// 公開 API：之後從 Google Drive / URL 載入作品
 window.galleryAPI = {
-  loadGLBFromURL(url, pedestalIndex = 0, options = {}) {
+  // 加入一件作品到太空中（GLB）
+  addGLB(url, name, meta = '', position = null) {
     if (!initialized) return console.warn('Gallery not initialized');
     new GLTFLoader().load(url, (gltf) => {
-      placeOnPedestal(gltf.scene, pedestalIndex, options);
+      addArtworkToSpace(gltf.scene, name, meta, position);
     }, undefined, (err) => console.error('GLB load error:', err));
   },
-  loadSTLFromURL(url, pedestalIndex = 0, options = {}) {
+  // 加入一件作品（STL）
+  addSTL(url, name, meta = '', position = null, color = 0xc0b89a) {
     if (!initialized) return console.warn('Gallery not initialized');
     new STLLoader().load(url, (geometry) => {
-      const material = new THREE.MeshPhysicalMaterial({
-        color: options.color || 0xc0b89a,
-        metalness: 0.4,
-        roughness: 0.35,
-        clearcoat: 0.3,
-        envMap,
-      });
-      const mesh = new THREE.Mesh(geometry, material);
-      placeOnPedestal(mesh, pedestalIndex, options);
+      geometry.center();
+      const mesh = new THREE.Mesh(geometry, new THREE.MeshPhysicalMaterial({
+        color, metalness: 0.5, roughness: 0.3, clearcoat: 0.4, envMap,
+      }));
+      addArtworkToSpace(mesh, name, meta, position);
     }, undefined, (err) => console.error('STL load error:', err));
   },
-  // 之後接 Google Drive：galleryAPI.loadFromGoogleDrive('FILE_ID', 0, { type: 'glb' })
-  loadFromGoogleDrive(fileId, pedestalIndex = 0, options = {}) {
-    const url = `https://drive.google.com/uc?export=download&id=${fileId}`;
-    if (options.type === 'stl') this.loadSTLFromURL(url, pedestalIndex, options);
-    else this.loadGLBFromURL(url, pedestalIndex, options);
+  // 加入一件作品（FBX）
+  addFBX(url, name, meta = '', position = null) {
+    if (!initialized) return console.warn('Gallery not initialized');
+    new FBXLoader().load(url, (object) => {
+      addArtworkToSpace(object, name, meta, position);
+    }, undefined, (err) => console.error('FBX load error:', err));
   },
-  clearPedestal(index) {
-    const ped = pedestals[index];
-    if (ped && ped.userData.artwork) {
-      ped.remove(ped.userData.artwork);
-      ped.userData.artwork = null;
-    }
-  }
+  // 之後接 Google Drive：galleryAPI.addFromGoogleDrive('FILE_ID', 'STL', '作品名', '2024')
+  addFromGoogleDrive(fileId, type = 'GLB', name = 'Untitled', meta = '', position = null) {
+    const url = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    const t = type.toUpperCase();
+    if (t === 'STL') this.addSTL(url, name, meta, position);
+    else if (t === 'FBX') this.addFBX(url, name, meta, position);
+    else this.addGLB(url, name, meta, position);
+  },
+  // 清空所有作品（測試/重新載入用）
+  clearAll() {
+    artworks.forEach(a => scene.remove(a.group));
+    artworks = [];
+    focusedArtwork = null;
+    hideLabel();
+  },
+  getArtworks() { return artworks; }
 };
 
-function placeOnPedestal(object, pedestalIndex, options = {}) {
-  const ped = pedestals[pedestalIndex];
-  if (!ped) return console.warn('Pedestal index out of range:', pedestalIndex);
-  if (ped.userData.artwork) ped.remove(ped.userData.artwork);
-
+function addArtworkToSpace(object, name, meta, position) {
+  // 自動置中與縮放
   const box = new THREE.Box3().setFromObject(object);
   const size = box.getSize(new THREE.Vector3());
   const center = box.getCenter(new THREE.Vector3());
-  const maxDim = Math.max(size.x, size.y, size.z);
-  const targetSize = options.size || 1.2;
+  const maxDim = Math.max(size.x, size.y, size.z) || 1;
+  const targetSize = 2.4 + Math.random() * 1.2;  // 太空中尺寸有變化
   const scale = targetSize / maxDim;
 
-  const wrapper = new THREE.Group();
   object.position.sub(center).multiplyScalar(scale);
   object.scale.setScalar(scale);
-  if (object.geometry && object.geometry.type === 'BufferGeometry') {
-    object.rotation.x = -Math.PI / 2;  // STL 預設躺著，扶正
-  }
-  wrapper.add(object);
-  wrapper.position.y = 1.2 + (size.y * scale) / 2;
-  ped.add(wrapper);
-  ped.userData.artwork = wrapper;
 
   object.traverse?.((c) => {
     if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; }
   });
+
+  // 包一層 group 方便擺位與點擊偵測
+  const group = new THREE.Group();
+  group.add(object);
+
+  // 隨機位置（球面散佈）若沒指定
+  if (!position) {
+    const r = 25 + Math.random() * 35;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(Math.random() * 2 - 1);
+    position = {
+      x: r * Math.sin(phi) * Math.cos(theta),
+      y: (Math.random() - 0.5) * 30,
+      z: r * Math.sin(phi) * Math.sin(theta),
+    };
+  }
+  group.position.set(position.x, position.y, position.z);
+
+  scene.add(group);
+
+  // raycaster 要點擊到子 mesh，所以記住主 mesh
+  const meshes = [];
+  object.traverse?.((c) => { if (c.isMesh) meshes.push(c); });
+
+  const artwork = {
+    group, object, meshes,
+    name, meta,
+    basePos: { ...position },
+    orbitPhase: Math.random() * Math.PI * 2,
+    orbitRadius: 0.6 + Math.random() * 0.8,
+    orbitSpeed: 0.15 + Math.random() * 0.2,
+    spinSpeed: new THREE.Vector3(
+      (Math.random() - 0.5) * 0.3,
+      0.2 + Math.random() * 0.3,
+      (Math.random() - 0.5) * 0.2
+    ),
+    bobSpeed: 0.5 + Math.random() * 0.4,
+  };
+  artworks.push(artwork);
+  return artwork;
 }
 
-function buildPedestal(x, z) {
-  const group = new THREE.Group();
-  group.position.set(x, 0, z);
+// ─── 建立預設佔位作品（在使用者接 Google Drive 之前，先讓太空有東西看）
+function createPlaceholders() {
+  const colors = [0xc0b89a, 0x9b8a6e, 0xd4c8a8, 0x8a7f6a, 0xb0a890, 0xc8c0a0, 0xa89878, 0xb8a880];
+  const factories = [
+    () => new THREE.TorusKnotGeometry(0.9, 0.28, 96, 16, 2, 3),
+    () => new THREE.IcosahedronGeometry(1.1, 0),
+    () => new THREE.OctahedronGeometry(1.1, 0),
+    () => new THREE.DodecahedronGeometry(1.0, 0),
+    () => {
+      const g = new THREE.TorusGeometry(1, 0.32, 16, 64);
+      return g;
+    },
+    () => {
+      const g = new THREE.ConeGeometry(0.9, 1.8, 5, 1);
+      return g;
+    },
+    () => new THREE.TetrahedronGeometry(1.2, 0),
+    () => new THREE.TorusKnotGeometry(0.8, 0.22, 100, 16, 3, 4),
+  ];
+  const names = [
+    'FLOW-ER · I',
+    'Mimic Sovereignty',
+    'Univase',
+    '44次日落',
+    'Theta · 4-8Hz',
+    'Acquiring Your Signal',
+    '上癮',
+    'Markdown as Method',
+  ];
+  const metas = [
+    '2023 · Sculpture',
+    '2024 · MFA Installation',
+    '2023 · Solo',
+    '2024 · Performance',
+    '2025 · Bio-signal',
+    '2024 · Group Show',
+    '2025 · Solo',
+    '2026 · Theory',
+  ];
 
-  // 底座
-  const base = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.55, 0.6, 1.1, 32, 1),
-    new THREE.MeshPhysicalMaterial({
-      color: 0x1a1a1a,
-      roughness: 0.4,
-      metalness: 0.05,
-      clearcoat: 0.4,
+  for (let i = 0; i < 8; i++) {
+    const geo = factories[i]();
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: colors[i],
+      metalness: 0.55 + Math.random() * 0.35,
+      roughness: 0.18 + Math.random() * 0.3,
+      clearcoat: 0.5,
+      clearcoatRoughness: 0.2,
       envMap,
-    })
-  );
-  base.position.y = 0.55;
-  base.castShadow = true;
-  base.receiveShadow = true;
-  group.add(base);
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    addArtworkToSpace(mesh, names[i], metas[i], null);
+  }
+}
 
-  // 頂飾金屬圈
-  const trimMat = new THREE.MeshPhysicalMaterial({
-    color: 0xc0b89a, metalness: 0.9, roughness: 0.3, envMap,
+// ─── 星空 / 星雲背景 ───
+function buildCosmos() {
+  // 1. 星星（粒子系統）
+  const starCount = 8000;
+  const starGeo = new THREE.BufferGeometry();
+  const starPos = new Float32Array(starCount * 3);
+  const starCol = new Float32Array(starCount * 3);
+  const starSize = new Float32Array(starCount);
+  for (let i = 0; i < starCount; i++) {
+    // 大球殼分佈
+    const r = 200 + Math.random() * 600;
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(Math.random() * 2 - 1);
+    starPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+    starPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta) * 0.7;
+    starPos[i*3+2] = r * Math.cos(phi);
+    // 顏色：白藍粉橘的微調
+    const tint = Math.random();
+    if (tint < 0.7) {  // 大多白色
+      starCol[i*3] = 0.95 + Math.random() * 0.05;
+      starCol[i*3+1] = 0.95 + Math.random() * 0.05;
+      starCol[i*3+2] = 0.95 + Math.random() * 0.05;
+    } else if (tint < 0.85) {  // 藍白
+      starCol[i*3] = 0.7 + Math.random() * 0.2;
+      starCol[i*3+1] = 0.85 + Math.random() * 0.15;
+      starCol[i*3+2] = 1.0;
+    } else {  // 橘紅
+      starCol[i*3] = 1.0;
+      starCol[i*3+1] = 0.75 + Math.random() * 0.2;
+      starCol[i*3+2] = 0.6 + Math.random() * 0.2;
+    }
+    starSize[i] = 0.4 + Math.random() * 1.6;
+  }
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  starGeo.setAttribute('color', new THREE.BufferAttribute(starCol, 3));
+  starGeo.setAttribute('aSize', new THREE.BufferAttribute(starSize, 1));
+
+  const starMat = new THREE.ShaderMaterial({
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: `
+      attribute float aSize;
+      attribute vec3 color;
+      varying vec3 vColor;
+      uniform float uTime;
+      void main(){
+        vColor = color;
+        vec4 mv = modelViewMatrix * vec4(position, 1.0);
+        // 微微閃爍
+        float twinkle = 0.7 + 0.3 * sin(uTime * 2.0 + position.x * 0.5);
+        gl_PointSize = aSize * (320.0 / -mv.z) * twinkle;
+        gl_Position = projectionMatrix * mv;
+      }
+    `,
+    fragmentShader: `
+      varying vec3 vColor;
+      void main(){
+        vec2 c = gl_PointCoord - 0.5;
+        float d = length(c);
+        if (d > 0.5) discard;
+        float a = smoothstep(0.5, 0.0, d);
+        gl_FragColor = vec4(vColor, a);
+      }
+    `,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
   });
-  const trim = new THREE.Mesh(new THREE.TorusGeometry(0.56, 0.02, 16, 64), trimMat);
-  trim.position.y = 1.1;
-  trim.rotation.x = Math.PI / 2;
-  group.add(trim);
-  const trim2 = trim.clone();
-  trim2.position.y = 0.05;
-  group.add(trim2);
+  const stars = new THREE.Points(starGeo, starMat);
+  scene.add(stars);
+  scene.userData.stars = stars;
 
-  // 射燈
-  const spot = new THREE.SpotLight(0xfff0d8, 5, 8, Math.PI / 7, 0.5, 1.6);
-  spot.position.set(0, 4, 0);
-  spot.target = base;
-  spot.castShadow = true;
-  spot.shadow.mapSize.set(1024, 1024);
-  spot.shadow.bias = -0.0005;
-  group.add(spot);
-  group.add(spot.target);
-
-  return group;
+  // 2. 星雲：三個巨大的半透明發光球
+  const nebulaColors = [0x4b3d6e, 0x6e4a5e, 0x3a5570];
+  for (let i = 0; i < 3; i++) {
+    const neb = new THREE.Mesh(
+      new THREE.SphereGeometry(40 + Math.random() * 30, 32, 32),
+      new THREE.MeshBasicMaterial({
+        color: nebulaColors[i],
+        transparent: true,
+        opacity: 0.07,
+        side: THREE.BackSide,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      })
+    );
+    neb.position.set(
+      (Math.random() - 0.5) * 200,
+      (Math.random() - 0.5) * 80,
+      (Math.random() - 0.5) * 200
+    );
+    scene.add(neb);
+  }
 }
 
 function buildGallery() {
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x070707);
-  scene.fog = new THREE.FogExp2(0x070707, 0.022);
+  scene.background = new THREE.Color(0x030308);
+  scene.fog = new THREE.FogExp2(0x030308, 0.006);
 
-  camera = new THREE.PerspectiveCamera(72, window.innerWidth / (window.innerHeight - HEADER_H), 0.05, 100);
-  camera.position.set(0, 1.65, GALLERY.depth / 2 - 2);
+  camera = new THREE.PerspectiveCamera(72, window.innerWidth / (window.innerHeight - HEADER_H), 0.1, 2000);
+  camera.position.set(0, 0, 18);
 
   const canvas = document.getElementById('galleryCanvas');
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(window.innerWidth, window.innerHeight - HEADER_H, false);
-  renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMappingExposure = 0.95;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const pmrem = new THREE.PMREMGenerator(renderer);
   envMap = pmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
   scene.environment = envMap;
 
-  // 地板
-  const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(GALLERY.width, GALLERY.depth),
-    new THREE.MeshPhysicalMaterial({
-      color: 0x14110d,
-      roughness: 0.25,
-      metalness: 0.0,
-      clearcoat: 0.5,
-      clearcoatRoughness: 0.4,
-      envMap,
-    })
-  );
-  floor.rotation.x = -Math.PI / 2;
-  floor.receiveShadow = true;
-  scene.add(floor);
+  // 照明：太空中主要靠 environment + 一些有色點光
+  scene.add(new THREE.AmbientLight(0x1a1530, 0.4));
+  const key = new THREE.DirectionalLight(0xfff0d8, 0.7);
+  key.position.set(40, 30, 20);
+  scene.add(key);
+  const fill = new THREE.PointLight(0x5e7ab0, 2, 200);
+  fill.position.set(-30, -20, 30);
+  scene.add(fill);
+  const rim = new THREE.PointLight(0xa87890, 1.5, 200);
+  rim.position.set(20, 40, -50);
+  scene.add(rim);
 
-  // 牆壁
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 0.85 });
-  const ceilMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.95 });
+  // 宇宙背景
+  buildCosmos();
+  // 預設作品
+  createPlaceholders();
 
-  const back = new THREE.Mesh(new THREE.PlaneGeometry(GALLERY.width, GALLERY.height), wallMat);
-  back.position.set(0, GALLERY.height / 2, -GALLERY.depth / 2);
-  back.receiveShadow = true; scene.add(back);
-
-  const front = back.clone();
-  front.position.z = GALLERY.depth / 2;
-  front.rotation.y = Math.PI; scene.add(front);
-
-  const left = new THREE.Mesh(new THREE.PlaneGeometry(GALLERY.depth, GALLERY.height), wallMat);
-  left.position.set(-GALLERY.width / 2, GALLERY.height / 2, 0);
-  left.rotation.y = Math.PI / 2;
-  left.receiveShadow = true; scene.add(left);
-
-  const right = left.clone();
-  right.position.x = GALLERY.width / 2;
-  right.rotation.y = -Math.PI / 2; scene.add(right);
-
-  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(GALLERY.width, GALLERY.depth), ceilMat);
-  ceil.position.y = GALLERY.height;
-  ceil.rotation.x = Math.PI / 2; scene.add(ceil);
-
-  // 牆腳/牆頂金屬細線
-  const trimMat = new THREE.MeshPhysicalMaterial({
-    color: 0xc0b89a, metalness: 0.85, roughness: 0.35, envMap,
-  });
-  const trims = [
-    { w: GALLERY.width, x: 0, z: -GALLERY.depth/2 + 0.01 },
-    { w: GALLERY.width, x: 0, z: GALLERY.depth/2 - 0.01 },
-    { w: GALLERY.depth, x: -GALLERY.width/2 + 0.01, z: 0, ry: Math.PI/2 },
-    { w: GALLERY.depth, x: GALLERY.width/2 - 0.01, z: 0, ry: Math.PI/2 },
-  ];
-  trims.forEach(t => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(t.w, 0.05, 0.03), trimMat);
-    m.position.set(t.x, 0.05, t.z);
-    if (t.ry) m.rotation.y = t.ry;
-    scene.add(m);
-    const top = m.clone();
-    top.position.y = GALLERY.height - 0.05;
-    scene.add(top);
-  });
-
-  // 環境光
-  scene.add(new THREE.AmbientLight(0xfff4e0, 0.18));
-  scene.add(new THREE.HemisphereLight(0xfff4e0, 0x101010, 0.32));
-
-  // 主吊燈
-  const mainLight = new THREE.PointLight(0xfff4d0, 28, 26, 1.8);
-  mainLight.position.set(0, GALLERY.height - 0.4, 0);
-  mainLight.castShadow = true;
-  mainLight.shadow.mapSize.set(1024, 1024);
-  scene.add(mainLight);
-
-  const chandelier = new THREE.Mesh(
-    new THREE.SphereGeometry(0.18, 16, 12),
-    new THREE.MeshStandardMaterial({ color: 0xfff4d0, emissive: 0xfff4d0, emissiveIntensity: 1.6 })
-  );
-  chandelier.position.copy(mainLight.position);
-  scene.add(chandelier);
-
-  // 基座（環形排佈 6 個）
-  pedestals = [];
-  const radius = Math.min(GALLERY.width, GALLERY.depth) * 0.32;
-  const placeholderColors = [0xc0b89a, 0xa0988a, 0x8a8275, 0xb0a890, 0x968d7a, 0xc8c0a0];
-  for (let i = 0; i < GALLERY.pedestalCount; i++) {
-    const angle = (i / GALLERY.pedestalCount) * Math.PI * 2 + Math.PI / 2;
-    const x = Math.cos(angle) * radius;
-    const z = Math.sin(angle) * radius;
-    const ped = buildPedestal(x, z);
-    pedestals.push(ped);
-    scene.add(ped);
-
-    // 預設佔位球（之後 loadFromGoogleDrive 會替換掉）
-    const placeholder = new THREE.Mesh(
-      new THREE.SphereGeometry(0.42, 32, 24),
-      new THREE.MeshPhysicalMaterial({
-        color: placeholderColors[i],
-        roughness: 0.35,
-        metalness: 0.15,
-        clearcoat: 0.4,
-        envMap,
-      })
-    );
-    placeholder.position.y = 1.7;
-    placeholder.castShadow = true;
-    placeholder.receiveShadow = true;
-    ped.add(placeholder);
-    ped.userData.artwork = placeholder;
-  }
-
-  // 控制器
+  // 控制器（保留 PointerLock 第一人稱視角，但移除盒子限制）
   controls = new PointerLockControls(camera, document.body);
   controls.addEventListener('lock', () => {
     document.getElementById('galleryHint').classList.add('hidden');
@@ -1848,17 +2073,105 @@ function buildGallery() {
     document.getElementById('galleryHint').classList.remove('hidden');
     document.getElementById('galleryHud').classList.remove('show');
     document.getElementById('galleryCanvas').classList.remove('locked');
+    // 如果在 focus 狀態下退出 pointer lock，也釋放 focus
+    if (focusedArtwork) releaseFocus();
   });
 
   velocity = new THREE.Vector3();
   direction = new THREE.Vector3();
+  raycaster = new THREE.Raycaster();
+  mouse = new THREE.Vector2();
 
   document.addEventListener('keydown', onGalleryKeyDown);
   document.addEventListener('keyup', onGalleryKeyUp);
+  // 點擊由 canvas 監聽（已 pointer-locked 時，mouse position 為螢幕中央）
+  document.getElementById('galleryCanvas').addEventListener('click', onGalleryClick);
   window.addEventListener('resize', onGalleryResize);
 
   initialized = true;
   animate();
+}
+
+function onGalleryClick(e) {
+  if (!document.getElementById('pg-gallery').classList.contains('on')) return;
+  if (!controls.isLocked) return;
+
+  // 已 focus → 點擊任何地方都釋放
+  if (focusedArtwork) {
+    releaseFocus();
+    return;
+  }
+
+  // PointerLock 下游標固定在中央，從相機向前射線
+  raycaster.setFromCamera({ x: 0, y: 0 }, camera);
+  const allMeshes = artworks.flatMap(a => a.meshes);
+  const hits = raycaster.intersectObjects(allMeshes, true);
+  if (hits.length === 0) return;
+
+  const hitMesh = hits[0].object;
+  const target = artworks.find(a =>
+    a.meshes.includes(hitMesh) ||
+    (a.object && (a.object === hitMesh || hitMesh.parent === a.object || isDescendant(hitMesh, a.object)))
+  );
+  if (target) focusOnArtwork(target);
+}
+
+function isDescendant(child, ancestor) {
+  let p = child.parent;
+  while (p) { if (p === ancestor) return true; p = p.parent; }
+  return false;
+}
+
+function focusOnArtwork(artwork) {
+  focusedArtwork = artwork;
+  savedCamPos = camera.position.clone();
+  savedCamQuat = camera.quaternion.clone();
+
+  // 計算目標位置：從相機到作品的方向上，距離作品 4-5 單位
+  const target = artwork.group.position.clone();
+  const dir = camera.position.clone().sub(target).normalize();
+  const endPos = target.clone().add(dir.multiplyScalar(4.5));
+
+  // 計算目標朝向
+  const lookMat = new THREE.Matrix4().lookAt(endPos, target, new THREE.Vector3(0, 1, 0));
+  const endQuat = new THREE.Quaternion().setFromRotationMatrix(lookMat);
+
+  focusTransition = {
+    startPos: camera.position.clone(),
+    startQuat: camera.quaternion.clone(),
+    endPos, endQuat,
+    t: 0,
+    duration: 1.1,
+    mode: 'focus',
+  };
+
+  showLabel(artwork.name, artwork.meta);
+}
+
+function releaseFocus() {
+  if (!focusedArtwork) return;
+  // 飛回相機 saved 位置
+  focusTransition = {
+    startPos: camera.position.clone(),
+    startQuat: camera.quaternion.clone(),
+    endPos: savedCamPos.clone(),
+    endQuat: savedCamQuat.clone(),
+    t: 0,
+    duration: 0.85,
+    mode: 'release',
+  };
+  focusedArtwork = null;
+  hideLabel();
+}
+
+function showLabel(title, meta) {
+  const el = document.getElementById('galleryLabel');
+  el.querySelector('.ll-title').textContent = title || 'Untitled';
+  el.querySelector('.ll-meta').textContent = meta || '';
+  el.classList.add('show');
+}
+function hideLabel() {
+  document.getElementById('galleryLabel').classList.remove('show');
 }
 
 function onGalleryKeyDown(e) {
@@ -1868,6 +2181,8 @@ function onGalleryKeyDown(e) {
     case 'KeyS': case 'ArrowDown':  moveBackward = true; break;
     case 'KeyA': case 'ArrowLeft':  moveLeft = true; break;
     case 'KeyD': case 'ArrowRight': moveRight = true; break;
+    case 'Space':                   moveUp = true; e.preventDefault(); break;
+    case 'ShiftLeft': case 'ShiftRight': moveDown = true; break;
   }
 }
 function onGalleryKeyUp(e) {
@@ -1876,6 +2191,8 @@ function onGalleryKeyUp(e) {
     case 'KeyS': case 'ArrowDown':  moveBackward = false; break;
     case 'KeyA': case 'ArrowLeft':  moveLeft = false; break;
     case 'KeyD': case 'ArrowRight': moveRight = false; break;
+    case 'Space':                   moveUp = false; break;
+    case 'ShiftLeft': case 'ShiftRight': moveDown = false; break;
   }
 }
 function onGalleryResize() {
@@ -1885,37 +2202,82 @@ function onGalleryResize() {
   renderer.setSize(window.innerWidth, window.innerHeight - HEADER_H, false);
 }
 
+// easing
+function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2; }
+
 function animate() {
-  requestAnimationFrame(animate);
+  rafId = requestAnimationFrame(animate);
   const time = performance.now();
   const delta = Math.min((time - prevTime) / 1000, 0.1);
+  const elapsed = time / 1000;
 
-  velocity.x -= velocity.x * 8 * delta;
-  velocity.z -= velocity.z * 8 * delta;
+  // ── 過渡動畫優先處理（focus / release）
+  if (focusTransition) {
+    focusTransition.t += delta / focusTransition.duration;
+    const t = Math.min(focusTransition.t, 1);
+    const e = easeInOutCubic(t);
 
-  direction.z = Number(moveForward) - Number(moveBackward);
-  direction.x = Number(moveRight) - Number(moveLeft);
-  direction.normalize();
+    // 如果是 focus 模式，endPos 要持續追蹤作品（因為作品在漂浮）
+    let endPos = focusTransition.endPos;
+    let endQuat = focusTransition.endQuat;
+    if (focusTransition.mode === 'focus' && focusedArtwork) {
+      const target = focusedArtwork.group.position.clone();
+      const dir = focusTransition.startPos.clone().sub(target).normalize();
+      endPos = target.clone().add(dir.multiplyScalar(4.5));
+      const lookMat = new THREE.Matrix4().lookAt(endPos, target, new THREE.Vector3(0, 1, 0));
+      endQuat = new THREE.Quaternion().setFromRotationMatrix(lookMat);
+    }
 
-  const speed = 22;
-  if (controls && controls.isLocked) {
+    camera.position.lerpVectors(focusTransition.startPos, endPos, e);
+    camera.quaternion.slerpQuaternions(focusTransition.startQuat, endQuat, e);
+
+    if (t >= 1) focusTransition = null;
+  }
+  // ── 已 focus 完成：相機跟著作品微浮動
+  else if (focusedArtwork) {
+    const target = focusedArtwork.group.position.clone();
+    const desiredDir = camera.position.clone().sub(target).normalize();
+    const desiredPos = target.clone().add(desiredDir.multiplyScalar(4.5));
+    camera.position.lerp(desiredPos, 0.06);
+    camera.lookAt(target);
+  }
+  // ── 自由飛行
+  else if (controls && controls.isLocked) {
+    velocity.x -= velocity.x * 5 * delta;
+    velocity.y -= velocity.y * 5 * delta;
+    velocity.z -= velocity.z * 5 * delta;
+
+    direction.z = Number(moveForward) - Number(moveBackward);
+    direction.x = Number(moveRight) - Number(moveLeft);
+    direction.normalize();
+
+    const speed = 32;
     if (moveForward || moveBackward) velocity.z -= direction.z * speed * delta;
     if (moveLeft || moveRight) velocity.x -= direction.x * speed * delta;
+    if (moveUp) velocity.y += speed * 0.7 * delta;
+    if (moveDown) velocity.y -= speed * 0.7 * delta;
+
     controls.moveRight(-velocity.x * delta);
     controls.moveForward(-velocity.z * delta);
-
-    const cam = controls.getObject();
-    const m = 1.0;
-    cam.position.x = Math.max(-GALLERY.width/2 + m, Math.min(GALLERY.width/2 - m, cam.position.x));
-    cam.position.z = Math.max(-GALLERY.depth/2 + m, Math.min(GALLERY.depth/2 - m, cam.position.z));
-    cam.position.y = 1.65;
+    controls.getObject().position.y += velocity.y * delta;
   }
 
-  pedestals.forEach((p, i) => {
-    if (p.userData.artwork) {
-      p.userData.artwork.rotation.y += delta * 0.18 * (i % 2 === 0 ? 1 : -1);
-    }
+  // 作品自轉 + 輕微漂浮（小幅軌道）
+  artworks.forEach(a => {
+    const phase = elapsed * a.orbitSpeed + a.orbitPhase;
+    a.group.position.x = a.basePos.x + Math.cos(phase) * a.orbitRadius * 0.3;
+    a.group.position.y = a.basePos.y + Math.sin(phase * a.bobSpeed) * a.orbitRadius * 0.5;
+    a.group.position.z = a.basePos.z + Math.sin(phase) * a.orbitRadius * 0.3;
+
+    a.object.rotation.x += a.spinSpeed.x * delta;
+    a.object.rotation.y += a.spinSpeed.y * delta;
+    a.object.rotation.z += a.spinSpeed.z * delta;
   });
+
+  // 星星閃爍動畫
+  if (scene.userData.stars) {
+    scene.userData.stars.material.uniforms.uTime.value = elapsed;
+  }
 
   prevTime = time;
   if (renderer && scene && camera) renderer.render(scene, camera);
