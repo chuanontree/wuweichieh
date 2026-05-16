@@ -2316,5 +2316,324 @@ window.initGalleryIfNeeded = function() {
 })();
 </script>
 
+<!-- ═══════════════════════════════════════════════════════════════════
+     SWILE AI 導覽員
+     設定方式：找到下方 const WWCAI_KEY = '...' 填入您的 Anthropic API 金鑰
+     取得金鑰：https://console.anthropic.com
+     建議在 Anthropic Console 設定月費上限以控制成本
+     ═══════════════════════════════════════════════════════════════════ -->
+<style>
+/* ── SWILE AI CHAT WIDGET ────────────────────────────────────────────── */
+#wwc-btn{position:fixed;bottom:2rem;right:2rem;z-index:600;display:flex;align-items:center;gap:.55rem;background:rgba(9,9,9,.96);border:1px solid rgba(192,184,154,.18);color:var(--metal);font-family:'Space Mono',monospace;font-size:.5rem;letter-spacing:.22em;text-transform:uppercase;padding:.62rem 1rem .62rem .75rem;cursor:pointer;transition:border-color .25s,color .25s,background .25s;backdrop-filter:blur(14px)}
+#wwc-btn:hover{border-color:var(--accent);color:var(--fg);background:rgba(192,184,154,.06)}
+#wwc-btn.active{border-color:rgba(192,184,154,.35);color:var(--accent)}
+#wwc-btn svg{width:14px;height:14px;flex-shrink:0;transition:transform .3s}
+#wwc-btn.active svg{transform:rotate(180deg)}
+#wwc-panel{position:fixed;bottom:calc(2rem + 52px);right:2rem;z-index:599;width:368px;max-height:560px;display:flex;flex-direction:column;background:rgba(10,10,10,.98);border:1px solid rgba(192,184,154,.14);backdrop-filter:blur(24px);transform:translateY(18px) scale(.97);opacity:0;pointer-events:none;transition:transform .32s cubic-bezier(.34,1.4,.64,1),opacity .22s ease}
+#wwc-panel.open{transform:translateY(0) scale(1);opacity:1;pointer-events:auto}
+@media(max-width:500px){
+  #wwc-panel{right:0;left:0;bottom:0;width:100%;max-height:75vh;border-left:none;border-right:none;border-bottom:none;border-radius:0}
+  #wwc-btn{bottom:1.4rem;right:1.4rem}
+}
+.wwc-head{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.1rem;border-bottom:1px solid rgba(192,184,154,.1);flex-shrink:0}
+.wwc-head-l{display:flex;align-items:center;gap:.75rem}
+.wwc-avatar{width:26px;height:26px;border:1px solid rgba(192,184,154,.2);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--accent);flex-shrink:0;position:relative}
+.wwc-avatar::before{content:'';position:absolute;inset:-3px;border:1px solid rgba(192,184,154,.07)}
+.wwc-name{font-size:.5rem;letter-spacing:.26em;text-transform:uppercase;color:var(--fg);font-weight:700}
+.wwc-sub{font-size:.42rem;letter-spacing:.16em;text-transform:uppercase;color:var(--metal);margin-top:.12rem;opacity:.7}
+.wwc-status{display:flex;align-items:center;gap:.4rem}
+.wwc-dot-live{width:5px;height:5px;border-radius:50%;background:#4caf78;box-shadow:0 0 5px rgba(76,175,120,.5);flex-shrink:0}
+.wwc-head-x{background:none;border:none;color:var(--metal);cursor:pointer;font-family:'Space Mono',monospace;font-size:.6rem;padding:.2rem .3rem;transition:color .2s;line-height:1;opacity:.6}
+.wwc-head-x:hover{color:var(--fg);opacity:1}
+#wwc-msgs{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem;scrollbar-width:thin;scrollbar-color:rgba(192,184,154,.1) transparent}
+#wwc-msgs::-webkit-scrollbar{width:2px}
+#wwc-msgs::-webkit-scrollbar-thumb{background:rgba(192,184,154,.12)}
+.wwc-msg{display:flex;flex-direction:column;gap:.2rem}
+.wwc-msg.usr{align-items:flex-end}
+.wwc-msg.ai{align-items:flex-start}
+.wwc-bubble{font-size:.575rem;line-height:1.8;letter-spacing:.025em;padding:.65rem .9rem;max-width:90%;border:1px solid transparent;white-space:pre-wrap;word-break:break-word}
+.wwc-msg.usr .wwc-bubble{background:rgba(192,184,154,.09);border-color:rgba(192,184,154,.18);color:var(--fg)}
+.wwc-msg.ai .wwc-bubble{background:rgba(255,255,255,.022);border-color:rgba(192,184,154,.08);color:var(--fg)}
+.wwc-typing-wrap{display:flex;align-items:center;gap:.5rem;padding:.55rem .9rem}
+.wwc-dot{width:3.5px;height:3.5px;border-radius:50%;background:var(--metal);animation:wwcdot 1.3s ease infinite}
+.wwc-dot:nth-child(2){animation-delay:.22s}
+.wwc-dot:nth-child(3){animation-delay:.44s}
+@keyframes wwcdot{0%,80%,100%{transform:scale(.6);opacity:.25}40%{transform:scale(1);opacity:.9}}
+#wwc-foot{border-top:1px solid rgba(192,184,154,.1);padding:.65rem;display:flex;gap:.45rem;align-items:flex-end;flex-shrink:0;background:rgba(9,9,9,.6)}
+#wwc-inp{flex:1;background:none;border:1px solid rgba(192,184,154,.14);color:var(--fg);font-family:'Space Mono',monospace;font-size:.56rem;letter-spacing:.025em;line-height:1.7;padding:.45rem .7rem;resize:none;max-height:110px;outline:none;transition:border-color .2s;overflow-y:auto}
+#wwc-inp:focus{border-color:rgba(192,184,154,.28)}
+#wwc-inp::placeholder{color:var(--metal);opacity:.38}
+#wwc-send{width:32px;height:32px;background:none;border:1px solid rgba(192,184,154,.14);color:var(--metal);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;padding:0}
+#wwc-send:hover:not([disabled]){border-color:var(--accent);color:var(--accent)}
+#wwc-send[disabled]{opacity:.28;cursor:default}
+#wwc-send svg{width:12px;height:12px}
+.wwc-hint{font-size:.45rem;letter-spacing:.1em;color:var(--metal);opacity:.32;text-align:center;padding:.35rem .9rem .5rem;flex-shrink:0}
+</style>
+
+<!-- ── Chat Toggle Button ─────────────────────────────────────────── -->
+<button id="wwc-btn" onclick="wwcChat.toggle()" title="SWILE AI 導覽員">
+  <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="7,1 8.8,4.6 13,5.2 10,8.1 10.6,12.2 7,10.3 3.4,12.2 4,8.1 1,5.2 5.2,4.6"/>
+  </svg>
+  AI 導覽
+</button>
+
+<!-- ── Chat Panel ──────────────────────────────────────────────────── -->
+<div id="wwc-panel" role="dialog" aria-label="SWILE AI 導覽員">
+  <div class="wwc-head">
+    <div class="wwc-head-l">
+      <div class="wwc-avatar">✦</div>
+      <div>
+        <div class="wwc-name">SWILE GUIDE</div>
+        <div class="wwc-sub wwc-status">
+          <span class="wwc-dot-live"></span>武威桀 · 作品集導覽員
+        </div>
+      </div>
+    </div>
+    <button class="wwc-head-x" onclick="wwcChat.toggle()" aria-label="關閉">✕</button>
+  </div>
+  <div id="wwc-msgs" role="log" aria-live="polite"></div>
+  <div class="wwc-hint">Enter 送出　Shift+Enter 換行</div>
+  <div id="wwc-foot">
+    <textarea id="wwc-inp" placeholder="輸入你的問題…" rows="1" aria-label="輸入訊息"></textarea>
+    <button id="wwc-send" aria-label="送出">
+      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 11L11 6 1 1v3.8l6.5 1.2L1 7.2V11z"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<script>
+const wwcChat = (function () {
+  /* ── API 設定 ──────────────────────────────────────────────────────
+     將您的 Anthropic API 金鑰填入下方引號中
+     或透過瀏覽器 console 執行：localStorage.setItem('wwc_ai_key','your-key')
+     ──────────────────────────────────────────────────────────────── */
+  const WWCAI_KEY = localStorage.getItem('wwc_ai_key') || 'YOUR_ANTHROPIC_API_KEY_HERE';
+  const WWCAI_MODEL = 'claude-haiku-4-5-20251001';
+
+  const SYSTEM = `你是武威桀（Wu Wei-Chieh）作品集網站的 AI 導覽員「SWILE GUIDE」。你的使命是以藝術氣質、溫暖且精準的語調，引導來訪者深入認識這位台灣新媒體藝術家的創作世界。
+
+【藝術家基本資料】
+姓名：武威桀 Wu Wei-Chieh
+生日：2000 年 12 月 31 日
+身份：新媒體藝術家 · SWILE Studio（WWC STUDIO）創立者
+學術背景：
+  - 學士：國立清華大學 藝術學院（科技藝術學系）
+  - 碩士就讀中：臺北藝術大學 新媒體藝術研究所
+
+【SWILE 品牌概念】
+取自「SMILE」—— 將 M 翻轉成 W，構成雙眼的形象；U 形成嘴巴。
+代表「視角的轉換帶來新的清晰」。換一個角度，看見不同的世界。
+
+【核心創作概念：FLOW-ER】
+「以花的姿態，自由地站立在社會中。」
+探索生命的流動性、慾望、選擇與掙扎之間的張力。
+核心命題：如何在社會規範中保持自我的流動與生長。
+
+【創作媒介與主題】
+媒介：新媒體藝術、聲音裝置、互動裝置、繪畫、珠寶設計、可穿戴藝術
+主題：
+  - 妥瑞症（TICS）的動態與身體控制研究
+  - 記憶的模糊性與重建
+  - AI 技術擴展對人類主體性的影響
+  - 死亡哲學（向死而生）
+  - 植物性與生命韌性
+  - 上癮與共生關係
+  - 身份認同與科技延伸
+
+【主要作品詳介】
+1. MEMORY（2025）
+   形式：互動裝置
+   概念：以機車後照鏡與即時攝影機呈現記憶的反照與模糊。觀者在後照鏡中看見延遲的自身影像，探討記憶如何在時間差中失真重構。
+
+2. 關係中的逆向行駛（2025）
+   形式：空間裝置
+   概念：置入逆向視角，打亂慣常的觀看方式，探討人際關係中的「位置感」與相互凝視的結構。
+
+3. 向死而生 初號機（2025）
+   形式：植物阻力驅動機械裝置
+   概念：以植物的生長力作為裝置動力來源，生命的韌性對抗機械的剛硬。哲學命題：面向死亡才能真正感知生存。
+
+4. WA,LTZ SERIES（2024）
+   形式：可穿戴花卉裝置系列（珠寶 × 行為藝術）
+   概念：以花作為隱喻，探索穿戴與展示、美麗與侵略性的邊界。系列名稱呼應「華爾滋」的旋轉流動性。
+
+5. FLOW-ER 3RD AVATAR（2024）
+   形式：NFC 感應機械面具裝置
+   概念：觀者以 NFC 感應觸發面具機械動作，探索身份的科技延伸與「替身」概念。第三化身象徵超越實體的自我投射。
+
+6. GOLDEN OR SILVER（2025）
+   系列：「上癮」系列
+   概念：以金與銀的二元對立，探索慾望、選擇，以及在共生關係中成癮的本質。
+
+【近期展覽】
+- 上癮 Solo Exhibition（2025）—— 個展
+- WHATZ ART FAIR 2025 —— 藝術博覽會
+- 回返 Exhibition（2026）—— 桃園高中藝術中心，群展
+- 多項群展（2021–2026）
+
+【回應指引】
+- 依訪客使用的語言自動切換（中文 / English 皆可）
+- 語調：帶藝術氣質的、溫暖的、有深度的。不過度熱情，保持質感。
+- 回答精簡有深度，避免冗長列點；適時引用作品概念或創作語言
+- 若訪客對某件作品感興趣，主動延伸相關的概念脈絡
+- 若問到不確定的細節，誠實說明，並邀請他們直接聯繫藝術家
+- 你是這個空間的「嚮導」，引導訪客進入藝術家的思維宇宙，而非只是問答機器`;
+
+  const WELCOME = '歡迎來到武威桀的創作空間。\n\n我是 SWILE GUIDE，這裡的 AI 導覽員。\n無論是想了解某件作品的概念、創作脈絡，或者對這個展覽有任何好奇——都可以問我。\n\n有什麼想探索的？';
+
+  let history = [];
+  let panelOpen = false;
+  let loading = false;
+
+  const panel   = document.getElementById('wwc-panel');
+  const msgs    = document.getElementById('wwc-msgs');
+  const inp     = document.getElementById('wwc-inp');
+  const sendBtn = document.getElementById('wwc-send');
+  const chatBtn = document.getElementById('wwc-btn');
+
+  /* ── UI helpers ──────────────────────────────────────────────── */
+  function addMsg(role, text) {
+    const wrap = document.createElement('div');
+    wrap.className = 'wwc-msg ' + role;
+    const bubble = document.createElement('div');
+    bubble.className = 'wwc-bubble';
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+    return bubble;
+  }
+
+  function streamMsg(role) {
+    const wrap = document.createElement('div');
+    wrap.className = 'wwc-msg ' + role;
+    const bubble = document.createElement('div');
+    bubble.className = 'wwc-bubble';
+    wrap.appendChild(bubble);
+    msgs.appendChild(wrap);
+    return bubble;
+  }
+
+  function showTyping() {
+    const d = document.createElement('div');
+    d.className = 'wwc-msg ai';
+    d.id = 'wwc-typing';
+    d.innerHTML = '<div class="wwc-typing-wrap"><span class="wwc-dot"></span><span class="wwc-dot"></span><span class="wwc-dot"></span></div>';
+    msgs.appendChild(d);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function hideTyping() {
+    const t = document.getElementById('wwc-typing');
+    if (t) t.remove();
+  }
+
+  function setLoading(state) {
+    loading = state;
+    sendBtn.disabled = state;
+    inp.disabled = state;
+  }
+
+  /* ── Auto-resize textarea ────────────────────────────────────── */
+  function resizeInp() {
+    inp.style.height = 'auto';
+    inp.style.height = Math.min(inp.scrollHeight, 110) + 'px';
+  }
+
+  /* ── Toggle panel ────────────────────────────────────────────── */
+  function toggle() {
+    panelOpen = !panelOpen;
+    panel.classList.toggle('open', panelOpen);
+    chatBtn.classList.toggle('active', panelOpen);
+    if (panelOpen) {
+      if (msgs.childElementCount === 0) addMsg('ai', WELCOME);
+      setTimeout(() => inp.focus(), 320);
+    }
+  }
+
+  /* ── Send message ─────────────────────────────────────────────── */
+  async function send() {
+    const text = inp.value.trim();
+    if (!text || loading) return;
+
+    if (!WWCAI_KEY || WWCAI_KEY === 'YOUR_ANTHROPIC_API_KEY_HERE') {
+      addMsg('ai', 'AI 導覽員目前尚未完成設定。如有問題，歡迎透過聯絡頁面直接詢問藝術家。\n\n(The AI guide is not yet configured. Please contact the artist directly.)');
+      return;
+    }
+
+    addMsg('usr', text);
+    history.push({ role: 'user', content: text });
+    inp.value = '';
+    inp.style.height = 'auto';
+    setLoading(true);
+    showTyping();
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': WWCAI_KEY,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: WWCAI_MODEL,
+          max_tokens: 800,
+          system: SYSTEM,
+          messages: history
+        })
+      });
+
+      hideTyping();
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const reply = data.content?.[0]?.text || '（無回應）';
+      addMsg('ai', reply);
+      history.push({ role: 'assistant', content: reply });
+
+      /* 保留最近 20 輪避免 token 過多 */
+      if (history.length > 40) history = history.slice(-40);
+
+    } catch (e) {
+      hideTyping();
+      addMsg('ai', '抱歉，連線暫時中斷。請稍後再試。\n\n(Temporarily unavailable. Please try again.)');
+      console.error('[SWILE Guide]', e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /* ── Key handler ─────────────────────────────────────────────── */
+  function onKey(e) {
+    resizeInp();
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  }
+
+  /* ── Bind events ─────────────────────────────────────────────── */
+  inp.addEventListener('input', resizeInp);
+  inp.addEventListener('keydown', onKey);
+  sendBtn.addEventListener('click', send);
+
+  /* Close panel on Escape */
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && panelOpen) toggle();
+  });
+
+  return { toggle };
+})();
+</script>
+
 </body>
 </html>
