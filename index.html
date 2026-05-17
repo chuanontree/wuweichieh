@@ -2407,12 +2407,13 @@ window.initGalleryIfNeeded = function() {
 <script>
 const wwcChat = (function () {
   /* ── API 設定 ──────────────────────────────────────────────────────
-     將您的 Google AI Studio API 金鑰填入下方引號中
      取得免費金鑰：https://aistudio.google.com/apikey
-     或透過瀏覽器 console 執行：localStorage.setItem('wwc_ai_key','your-key')
+     設定方式一：直接將金鑰填入下方引號
+     設定方式二：瀏覽器 console 執行 localStorage.setItem('wwc_ai_key','your-key')
      ──────────────────────────────────────────────────────────────── */
-  const WWCAI_KEY = localStorage.getItem('wwc_ai_key') || 'YOUR_GOOGLE_AI_STUDIO_KEY_HERE';
+  const WWCAI_KEY_DEFAULT = 'YOUR_GOOGLE_AI_STUDIO_KEY_HERE';
   const WWCAI_MODEL = 'gemini-2.0-flash';
+  function getKey() { return localStorage.getItem('wwc_ai_key') || WWCAI_KEY_DEFAULT; }
 
   const SYSTEM = `你是武威桀（Wu Wei-Chieh）作品集網站的 AI 導覽員「SWILE GUIDE」。你的使命是以藝術氣質、溫暖且精準的語調，引導來訪者深入認識這位台灣新媒體藝術家的創作世界。
 
@@ -2560,7 +2561,8 @@ const wwcChat = (function () {
     const text = inp.value.trim();
     if (!text || loading) return;
 
-    if (!WWCAI_KEY || WWCAI_KEY === 'YOUR_GOOGLE_AI_STUDIO_KEY_HERE') {
+    const key = getKey();
+    if (!key || key === 'YOUR_GOOGLE_AI_STUDIO_KEY_HERE') {
       addMsg('ai', 'AI 導覽員目前尚未完成設定。如有問題，歡迎透過聯絡頁面直接詢問藝術家。\n\n(The AI guide is not yet configured. Please contact the artist directly.)');
       return;
     }
@@ -2573,7 +2575,7 @@ const wwcChat = (function () {
     showTyping();
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${WWCAI_MODEL}:generateContent?key=${WWCAI_KEY}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${WWCAI_MODEL}:generateContent?key=${key}`;
       const res = await fetch(url, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
