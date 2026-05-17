@@ -2407,12 +2407,11 @@ window.initGalleryIfNeeded = function() {
 <script>
 const wwcChat = (function () {
   /* ── API 設定 ──────────────────────────────────────────────────────
-     將您的 Google AI Studio API 金鑰填入下方引號中
-     取得免費金鑰：https://aistudio.google.com/apikey
+     取得免費 Groq 金鑰：https://console.groq.com → API Keys
      或透過瀏覽器 console 執行：localStorage.setItem('wwc_ai_key','your-key')
      ──────────────────────────────────────────────────────────────── */
-  const WWCAI_KEY = 'AIzaSyBId9cTT9vkXfQva0CMew7_O5hWMrc6NiU';
-  const WWCAI_MODEL = 'gemini-2.0-flash';
+  const WWCAI_KEY = '';
+  const WWCAI_MODEL = 'llama-3.3-70b-versatile';
   function getKey() { return localStorage.getItem('wwc_ai_key') || WWCAI_KEY; }
 
   const SYSTEM = `你是武威桀（Wu Wei-Chieh）作品集網站的 AI 導覽員「SWILE GUIDE」。你的使命是以藝術氣質、溫暖且精準的語調，引導來訪者深入認識這位台灣新媒體藝術家的創作世界。
@@ -2568,21 +2567,23 @@ const wwcChat = (function () {
     }
 
     addMsg('usr', text);
-    history.push({ role: 'user', parts: [{ text }] });
+    history.push({ role: 'user', content: text });
     inp.value = '';
     inp.style.height = 'auto';
     setLoading(true);
     showTyping();
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${WWCAI_MODEL}:generateContent?key=${key}`;
-      const res = await fetch(url, {
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          'authorization': `Bearer ${key}`
+        },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM }] },
-          contents: history,
-          generationConfig: { maxOutputTokens: 800 }
+          model: WWCAI_MODEL,
+          messages: [{ role: 'system', content: SYSTEM }, ...history],
+          max_tokens: 800
         })
       });
 
@@ -2594,9 +2595,9 @@ const wwcChat = (function () {
       }
 
       const data = await res.json();
-      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '（無回應）';
+      const reply = data.choices?.[0]?.message?.content || '（無回應）';
       addMsg('ai', reply);
-      history.push({ role: 'model', parts: [{ text: reply }] });
+      history.push({ role: 'assistant', content: reply });
 
       /* 保留最近 20 輪避免 token 過多 */
       if (history.length > 40) history = history.slice(-40);
