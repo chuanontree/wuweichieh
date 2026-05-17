@@ -2407,11 +2407,12 @@ window.initGalleryIfNeeded = function() {
 <script>
 const wwcChat = (function () {
   /* ── API 設定 ──────────────────────────────────────────────────────
-     將您的 Anthropic API 金鑰填入下方引號中
+     將您的 Google AI Studio API 金鑰填入下方引號中
+     取得免費金鑰：https://aistudio.google.com/apikey
      或透過瀏覽器 console 執行：localStorage.setItem('wwc_ai_key','your-key')
      ──────────────────────────────────────────────────────────────── */
-  const WWCAI_KEY = localStorage.getItem('wwc_ai_key') || 'YOUR_ANTHROPIC_API_KEY_HERE';
-  const WWCAI_MODEL = 'claude-haiku-4-5-20251001';
+  const WWCAI_KEY = localStorage.getItem('wwc_ai_key') || 'YOUR_GOOGLE_AI_STUDIO_KEY_HERE';
+  const WWCAI_MODEL = 'gemini-2.0-flash';
 
   const SYSTEM = `你是武威桀（Wu Wei-Chieh）作品集網站的 AI 導覽員「SWILE GUIDE」。你的使命是以藝術氣質、溫暖且精準的語調，引導來訪者深入認識這位台灣新媒體藝術家的創作世界。
 
@@ -2559,32 +2560,27 @@ const wwcChat = (function () {
     const text = inp.value.trim();
     if (!text || loading) return;
 
-    if (!WWCAI_KEY || WWCAI_KEY === 'YOUR_ANTHROPIC_API_KEY_HERE') {
+    if (!WWCAI_KEY || WWCAI_KEY === 'YOUR_GOOGLE_AI_STUDIO_KEY_HERE') {
       addMsg('ai', 'AI 導覽員目前尚未完成設定。如有問題，歡迎透過聯絡頁面直接詢問藝術家。\n\n(The AI guide is not yet configured. Please contact the artist directly.)');
       return;
     }
 
     addMsg('usr', text);
-    history.push({ role: 'user', content: text });
+    history.push({ role: 'user', parts: [{ text }] });
     inp.value = '';
     inp.style.height = 'auto';
     setLoading(true);
     showTyping();
 
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${WWCAI_MODEL}:generateContent?key=${WWCAI_KEY}`;
+      const res = await fetch(url, {
         method: 'POST',
-        headers: {
-          'x-api-key': WWCAI_KEY,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
+        headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          model: WWCAI_MODEL,
-          max_tokens: 800,
-          system: SYSTEM,
-          messages: history
+          system_instruction: { parts: [{ text: SYSTEM }] },
+          contents: history,
+          generationConfig: { maxOutputTokens: 800 }
         })
       });
 
@@ -2596,9 +2592,9 @@ const wwcChat = (function () {
       }
 
       const data = await res.json();
-      const reply = data.content?.[0]?.text || '（無回應）';
+      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '（無回應）';
       addMsg('ai', reply);
-      history.push({ role: 'assistant', content: reply });
+      history.push({ role: 'model', parts: [{ text: reply }] });
 
       /* 保留最近 20 輪避免 token 過多 */
       if (history.length > 40) history = history.slice(-40);
