@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>武威桀 Wu Wei Chieh — WWC STUDIO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#090909;--fg:#e4e0d6;--metal:#a0988a;--accent:#c0b89a;--dim:rgba(192,184,154,.09);--line:rgba(192,184,154,.13);--edit:rgba(192,184,154,.5);--danger:#e03030;--gap:2px}
@@ -423,6 +424,614 @@ body.edit .drag-handle{display:flex}
   color:rgba(255,255,255,.42);
   text-transform:uppercase;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   THEME SWITCHER COMPONENT
+═══════════════════════════════════════════════════════════════ */
+#themeSwitch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-right: 10px;
+}
+.ts-btn {
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--metal);
+  font-family: 'Space Mono', monospace;
+  font-size: .58rem;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0;
+}
+.ts-btn:hover { color: var(--fg); border-color: var(--accent); }
+.ts-btn.active { color: var(--accent); border-color: var(--accent); background: var(--dim); }
+
+/* ═══════════════════════════════════════════════════════════════
+   THEME A — EDITORIAL BRUTAL
+═══════════════════════════════════════════════════════════════ */
+[data-theme="brutal"] {
+  --bg: #050505;
+  --fg: #F0ECE4;
+  --metal: #888;
+  --accent: #E8FF00;
+  --line: rgba(240,236,228,.12);
+  --dim: rgba(240,236,228,.06);
+  --edit: rgba(232,255,0,.5);
+}
+
+[data-theme="brutal"] body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+[data-theme="brutal"] header {
+  background: rgba(5,5,5,.97);
+  border-bottom: 1px solid rgba(232,255,0,.25);
+}
+
+/* Brutal typography */
+[data-theme="brutal"] .hn {
+  font-family: 'Cormorant Garamond', 'Georgia', serif;
+  font-style: italic;
+  font-size: clamp(4rem, 12vw, 11rem);
+  font-weight: 300;
+  line-height: .85;
+  letter-spacing: -.04em;
+}
+
+[data-theme="brutal"] .hn .ol {
+  -webkit-text-stroke: 1px var(--accent);
+}
+
+[data-theme="brutal"] .htag {
+  font-family: 'Space Mono', monospace;
+  font-size: .62rem;
+  color: var(--metal);
+  text-transform: uppercase;
+  letter-spacing: .2em;
+}
+
+/* Brutal section headers */
+[data-theme="brutal"] .sh {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 2.2rem;
+  font-weight: 300;
+  border-bottom: 2px solid var(--accent);
+  letter-spacing: -.02em;
+}
+
+/* Brutal work grid — masonry-like varying sizes */
+[data-theme="brutal"] #wg {
+  column-count: 2;
+  column-gap: 3px;
+}
+
+[data-theme="brutal"] .wi {
+  break-inside: avoid;
+  margin-bottom: 3px;
+  transform-origin: center center;
+  transition: transform .3s ease, box-shadow .3s ease;
+  border: 1px solid transparent;
+}
+
+[data-theme="brutal"] .wi:hover {
+  transform: rotate(-1.5deg) scale(1.01);
+  border-color: var(--accent);
+  box-shadow: 4px 4px 0 var(--accent);
+  z-index: 10;
+  position: relative;
+}
+
+[data-theme="brutal"] .wi:nth-child(3n+1) {
+  transform: rotate(.3deg);
+}
+[data-theme="brutal"] .wi:nth-child(3n+1):hover {
+  transform: rotate(-1.5deg) scale(1.01);
+}
+
+[data-theme="brutal"] .wt {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  font-weight: 400;
+}
+
+[data-theme="brutal"] .wcat {
+  font-family: 'Space Mono', monospace;
+  font-size: .5rem;
+  letter-spacing: .2em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+/* Brutal CV timeline */
+[data-theme="brutal"] .eyr {
+  border-bottom: 1px solid rgba(232,255,0,.12);
+}
+
+[data-theme="brutal"] .ey {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 1.4rem;
+  color: var(--accent);
+  font-weight: 300;
+}
+
+/* Brutal nav */
+[data-theme="brutal"] .ni {
+  font-size: .55rem;
+  letter-spacing: .18em;
+  border-left-color: rgba(232,255,0,.2);
+}
+[data-theme="brutal"] .ni:hover,
+[data-theme="brutal"] .ni.on {
+  color: var(--accent);
+  background: var(--dim);
+  border-left-color: var(--accent);
+}
+
+/* Brutal footer */
+[data-theme="brutal"] footer {
+  border-top: 2px solid rgba(232,255,0,.2);
+}
+
+/* Brutal hero layout — asymmetric */
+[data-theme="brutal"] #hero {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding-bottom: 8vh;
+}
+
+[data-theme="brutal"] #hero .hc {
+  max-width: 70%;
+}
+
+/* Brutal about section */
+[data-theme="brutal"] .about-body,
+[data-theme="brutal"] .ab-text {
+  font-family: 'Space Mono', monospace;
+  font-size: .7rem;
+  line-height: 1.9;
+}
+
+/* Brutal logo */
+[data-theme="brutal"] .logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-weight: 600;
+  font-size: .9rem;
+  letter-spacing: .08em;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THEME B — LIQUID LUXURY
+═══════════════════════════════════════════════════════════════ */
+[data-theme="luxury"] {
+  --bg: #0A0806;
+  --fg: #EDE8DE;
+  --metal: #C9A96E;
+  --accent: #C9A96E;
+  --line: rgba(201,169,110,.18);
+  --dim: rgba(201,169,110,.08);
+  --edit: rgba(201,169,110,.5);
+}
+
+[data-theme="luxury"] body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+[data-theme="luxury"] header {
+  background: rgba(10,8,6,.97);
+  border-bottom: 1px solid rgba(201,169,110,.2);
+  backdrop-filter: blur(20px);
+}
+
+/* Luxury hero — text bottom-left, higher bg opacity */
+[data-theme="luxury"] #hero {
+  justify-content: flex-end;
+  padding-bottom: 6vh;
+  padding-left: 5vw;
+}
+
+[data-theme="luxury"] #hero::before {
+  opacity: .35 !important;
+}
+
+[data-theme="luxury"] .hbg {
+  opacity: .35 !important;
+}
+
+[data-theme="luxury"] .hn {
+  font-family: 'Playfair Display', 'Georgia', serif;
+  font-style: italic;
+  font-size: clamp(3.5rem, 9vw, 9rem);
+  font-weight: 400;
+  line-height: .9;
+  letter-spacing: -.03em;
+}
+
+[data-theme="luxury"] .hn .ol {
+  -webkit-text-stroke: 1px var(--accent);
+}
+
+[data-theme="luxury"] .htag {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  color: var(--metal);
+  font-size: .88rem;
+  letter-spacing: .04em;
+}
+
+/* Luxury section headers */
+[data-theme="luxury"] .sh {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 2rem;
+  font-weight: 400;
+  border-bottom: 1px solid rgba(201,169,110,.3);
+  color: var(--fg);
+}
+
+/* Luxury work grid — wide horizontal + portrait mix */
+[data-theme="luxury"] #wg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 16px;
+}
+
+[data-theme="luxury"] .wi {
+  border: 1px solid transparent;
+  overflow: hidden;
+  transition: border-color .4s ease, box-shadow .4s ease;
+}
+
+[data-theme="luxury"] .wi:nth-child(4n+1) {
+  grid-column: span 2;
+}
+
+[data-theme="luxury"] .wi:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 30px rgba(201,169,110,.15);
+}
+
+[data-theme="luxury"] .wi:hover img,
+[data-theme="luxury"] .wi:hover .wp {
+  transform: scale(1.04);
+  filter: brightness(1.08) saturate(1.1);
+}
+
+[data-theme="luxury"] .wp {
+  transition: transform .5s cubic-bezier(.25,.46,.45,.94), filter .5s ease;
+}
+
+[data-theme="luxury"] .wi img {
+  transition: transform .5s cubic-bezier(.25,.46,.45,.94), filter .5s ease;
+}
+
+[data-theme="luxury"] .wt {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--fg);
+}
+
+[data-theme="luxury"] .wcat {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  color: var(--metal);
+  font-size: .75rem;
+}
+
+/* Luxury CV */
+[data-theme="luxury"] .eyr {
+  border-bottom: 1px solid rgba(201,169,110,.15);
+}
+
+[data-theme="luxury"] .ey {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1.3rem;
+  color: var(--metal);
+}
+
+[data-theme="luxury"] .et {
+  font-family: 'Playfair Display', serif;
+  font-size: .88rem;
+}
+
+/* Luxury nav */
+[data-theme="luxury"] .ni {
+  letter-spacing: .12em;
+  border-left-color: rgba(201,169,110,.18);
+}
+
+[data-theme="luxury"] .ni:hover,
+[data-theme="luxury"] .ni.on {
+  color: var(--accent);
+  background: var(--dim);
+}
+
+/* Luxury logo */
+[data-theme="luxury"] .logo {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: .85rem;
+  letter-spacing: .06em;
+}
+
+/* Luxury footer */
+[data-theme="luxury"] footer {
+  border-top: 1px solid rgba(201,169,110,.2);
+}
+
+/* Luxury about */
+[data-theme="luxury"] .ab-text {
+  font-family: 'Playfair Display', serif;
+  font-size: .92rem;
+  line-height: 1.9;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THEME C — SYSTEMIC VOID
+═══════════════════════════════════════════════════════════════ */
+[data-theme="void"] {
+  --bg: #000000;
+  --fg: #FFFFFF;
+  --metal: rgba(255,255,255,.45);
+  --accent: #FFFFFF;
+  --line: rgba(255,255,255,.1);
+  --dim: rgba(255,255,255,.04);
+  --edit: rgba(255,255,255,.5);
+}
+
+[data-theme="void"] body {
+  background: var(--bg);
+  color: var(--fg);
+  cursor: crosshair;
+}
+
+[data-theme="void"] header {
+  background: rgba(0,0,0,.98);
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+
+/* Scanlines overlay */
+[data-theme="void"] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,.08) 2px,
+    rgba(0,0,0,.08) 4px
+  );
+}
+
+/* Void hero — typewriter-like staggered reveal */
+[data-theme="void"] .hn {
+  font-family: 'Space Mono', monospace;
+  font-size: clamp(2.2rem, 6vw, 6rem);
+  font-weight: 700;
+  line-height: .95;
+  letter-spacing: -.02em;
+  animation: void-text-in 1.2s steps(30, end) both;
+}
+
+@keyframes void-text-in {
+  from { opacity: 0; clip-path: inset(0 100% 0 0); }
+  to   { opacity: 1; clip-path: inset(0 0% 0 0); }
+}
+
+[data-theme="void"] .htag {
+  font-family: 'Space Mono', monospace;
+  font-size: .62rem;
+  color: rgba(255,255,255,.5);
+  letter-spacing: .15em;
+  animation: void-text-in 1.4s steps(40, end) .3s both;
+}
+
+/* Void section headers */
+[data-theme="void"] .sh {
+  font-family: 'Space Mono', monospace;
+  font-size: .75rem;
+  letter-spacing: .3em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.5);
+}
+
+[data-theme="void"] .sh::before {
+  content: '// ';
+  color: rgba(255,255,255,.25);
+}
+
+/* Void work grid — exposed grid lines with labels */
+[data-theme="void"] #wg {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.08);
+  padding: 0;
+}
+
+[data-theme="void"] .wi {
+  background: var(--bg);
+  border: none;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Coordinate label on each item */
+[data-theme="void"] .wi::before {
+  content: attr(data-index);
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: .48rem;
+  color: rgba(255,255,255,.3);
+  letter-spacing: .12em;
+  z-index: 5;
+  pointer-events: none;
+}
+
+/* RGB glitch on hover */
+[data-theme="void"] .wi:hover {
+  animation: void-glitch .2s ease infinite;
+}
+
+[data-theme="void"] .wi:hover .wt {
+  text-shadow:
+    1px 0 0 rgba(255,0,0,.7),
+    -1px 0 0 rgba(0,255,255,.7);
+  animation: void-glitch-text .15s step-end infinite;
+}
+
+@keyframes void-glitch {
+  0%   { transform: translate(0); }
+  20%  { transform: translate(-1px, 1px); }
+  40%  { transform: translate(1px, -1px); }
+  60%  { transform: translate(-1px, -1px); }
+  80%  { transform: translate(1px, 1px); }
+  100% { transform: translate(0); }
+}
+
+@keyframes void-glitch-text {
+  0%   { text-shadow: 1px 0 0 rgba(255,0,0,.7), -1px 0 0 rgba(0,255,255,.7); }
+  25%  { text-shadow: -1px 0 0 rgba(255,0,0,.7), 1px 0 0 rgba(0,255,255,.7); }
+  50%  { text-shadow: 1px 1px 0 rgba(255,0,0,.7), -1px -1px 0 rgba(0,255,255,.7); }
+  75%  { text-shadow: -1px 1px 0 rgba(255,0,0,.7), 1px -1px 0 rgba(0,255,255,.7); }
+  100% { text-shadow: 1px 0 0 rgba(255,0,0,.7), -1px 0 0 rgba(0,255,255,.7); }
+}
+
+[data-theme="void"] .wt {
+  font-family: 'Space Mono', monospace;
+  font-size: .7rem;
+  letter-spacing: .06em;
+  transition: text-shadow .1s;
+}
+
+[data-theme="void"] .wcat {
+  font-family: 'Space Mono', monospace;
+  font-size: .48rem;
+  letter-spacing: .18em;
+  color: rgba(255,255,255,.4);
+  text-transform: uppercase;
+}
+
+/* Void CV */
+[data-theme="void"] .eyr {
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  font-family: 'Space Mono', monospace;
+}
+
+[data-theme="void"] .ey {
+  font-family: 'Space Mono', monospace;
+  font-size: .8rem;
+  color: rgba(255,255,255,.45);
+  letter-spacing: .12em;
+}
+
+[data-theme="void"] .ey::before {
+  content: '[';
+  color: rgba(255,255,255,.2);
+}
+[data-theme="void"] .ey::after {
+  content: ']';
+  color: rgba(255,255,255,.2);
+}
+
+[data-theme="void"] .et {
+  font-family: 'Space Mono', monospace;
+  font-size: .62rem;
+  line-height: 1.7;
+}
+
+/* Void nav */
+[data-theme="void"] .ni {
+  font-size: .52rem;
+  letter-spacing: .22em;
+  border-left-color: rgba(255,255,255,.08);
+}
+
+[data-theme="void"] .ni::before {
+  content: '> ';
+  opacity: 0;
+  transition: opacity .2s;
+}
+
+[data-theme="void"] .ni:hover::before,
+[data-theme="void"] .ni.on::before {
+  opacity: 1;
+}
+
+[data-theme="void"] .ni:hover,
+[data-theme="void"] .ni.on {
+  color: var(--fg);
+  background: var(--dim);
+  border-left-color: var(--fg);
+}
+
+/* Void logo */
+[data-theme="void"] .logo {
+  font-family: 'Space Mono', monospace;
+  font-size: .6rem;
+  letter-spacing: .3em;
+}
+
+/* Void footer */
+[data-theme="void"] footer {
+  border-top: 1px solid rgba(255,255,255,.06);
+  font-family: 'Space Mono', monospace;
+  font-size: .58rem;
+}
+
+/* Void about */
+[data-theme="void"] .ab-text {
+  font-family: 'Space Mono', monospace;
+  font-size: .68rem;
+  line-height: 1.9;
+  color: rgba(255,255,255,.75);
+}
+
+/* Void cursor on interactive elements */
+[data-theme="void"] button,
+[data-theme="void"] a,
+[data-theme="void"] [onclick] {
+  cursor: crosshair;
+}
+
+/* Void — filter buttons */
+[data-theme="void"] .fb {
+  font-family: 'Space Mono', monospace;
+  font-size: .5rem;
+  letter-spacing: .2em;
+  border: 1px solid rgba(255,255,255,.15);
+}
+
+[data-theme="void"] .fb.on,
+[data-theme="void"] .fb:hover {
+  border-color: var(--fg);
+  background: var(--dim);
+  color: var(--fg);
+}
+
 </style>
   <script async src="//www.instagram.com/embed.js"></script>
 </head>
@@ -452,6 +1061,12 @@ body.edit .drag-handle{display:flex}
     <button class="ni" onclick="pg('about',this)">About</button>
     <button class="ni" onclick="pg('cv',this)">CV</button>
     <button class="ni" onclick="pg('gallery',this)">Gallery</button>
+    <div id="themeSwitch">
+      <button class="ts-btn active" data-theme="default" title="Original">&#9689;</button>
+      <button class="ts-btn" data-theme="brutal" title="Editorial Brutal">A</button>
+      <button class="ts-btn" data-theme="luxury" title="Liquid Luxury">B</button>
+      <button class="ts-btn" data-theme="void" title="Systemic Void">C</button>
+    </div>
     <button id="editBtn" onclick="toggleEdit()">Edit</button>
   </nav>
 </header>
@@ -2624,5 +3239,39 @@ const wwcChat = (function () {
 })();
 </script>
 
+
+<script>
+// Theme Switcher
+(function() {
+  var btns = document.querySelectorAll('.ts-btn');
+  var saved = localStorage.getItem('wwc-theme') || 'default';
+  document.documentElement.setAttribute('data-theme', saved);
+  btns.forEach(function(b) {
+    if (b.dataset.theme === saved) b.classList.add('active');
+    else b.classList.remove('active');
+    b.addEventListener('click', function() {
+      var t = this.dataset.theme;
+      document.documentElement.setAttribute('data-theme', t);
+      localStorage.setItem('wwc-theme', t);
+      btns.forEach(function(x) { x.classList.remove('active'); });
+      this.classList.add('active');
+    });
+  });
+
+  // Add coordinate labels to work items for Void theme
+  function labelWorkItems() {
+    var items = document.querySelectorAll('.wi');
+    items.forEach(function(item, i) {
+      var n = String(i + 1).padStart(2, '0');
+      item.setAttribute('data-index', '[' + n + ']');
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', labelWorkItems);
+  } else {
+    labelWorkItems();
+  }
+})();
+</script>
 </body>
 </html>
