@@ -1,0 +1,329 @@
+  // ════ Shared per-theme FX lifecycle ═════════════════════════════════
+  var fxCleanup = [];
+  var themeFilter = null;
+  function onFx(target, ev, fn, opts) {
+    target.addEventListener(ev, fn, opts);
+    fxCleanup.push(function() { target.removeEventListener(ev, fn, opts); });
+  }
+  function ivFx(fn, ms) {
+    var id = setInterval(fn, ms);
+    fxCleanup.push(function() { clearInterval(id); });
+  }
+  function teardownThemeFx() {
+    fxCleanup.forEach(function(f) { try { f(); } catch (err) {} });
+    fxCleanup = [];
+    themeFilter = null;
+  }
+  function catMatch(w, cat) { return (w.cat || '').split(/\s+/).indexOf(cat) !== -1; }
+  function activeCat() {
+    var on = document.querySelector('#catBar .ct.on');
+    if (!on) return null;
+    var m = (on.getAttribute('onclick') || '').match(/'([^']+)'/);
+    return m ? m[1] : null;
+  }
+
+  // ════ THEME D — INFINITE CANVAS ═════════════════════════════════
+  function buildCanvas() {
+    var GR = 0.6180339887;
+    var CW = 2600, CH = 1700;
+    var inner = '';
+    WORKS.forEach(function(w, i) {
+      var x = Math.floor((((i + 1) * GR) % 1) * (CW - 320)) + 30;
+      var y = Math.floor((((i + 1) * GR * 7919) % 1) * (CH - 440)) + 40;
+      var rot = ((i * 53) % 11) - 5;
+      var trot = ((i * 31) % 13) - 6;
+      inner += '<div class="cv-note wi" data-cat="' + esc(w.cat) + '" data-i="' + i + '"' +
+        ' style="left:' + x + 'px;top:' + y + 'px;--rot:' + rot + 'deg;--taperot:' + trot + 'deg">' +
+        '<span class="cv-tape"></span>' +
+        '<span class="cv-pin">N°' + pad2(i) + '</span>' +
+        (w.src ? '<img src="' + esc(w.src) + '" alt="' + esc(w.title) + '" loading="lazy">' : '') +
+        '<div class="cv-t">' + esc(w.title) + '</div>' +
+        '<div class="cv-m">' + esc(w.meta) + '</div>' +
+        '</div>';
+    });
+    grid.innerHTML =
+      '<div id="cvViewport"><div id="cvWorld" style="width:' + CW + 'px;height:' + CH + 'px">' + inner + '</div>' +
+      '<div id="cvMap"></div>' +
+      '<div class="cv-hint">drag to pan · scroll to zoom · click a note ✎</div></div>';
+    var vp = document.getElementById('cvViewport');
+    var world = document.getElementById('cvWorld');
+    var map = document.getElementById('cvMap');
+    var mapHtml = '';
+    grid.querySelectorAll('.cv-note').forEach(function(n) {
+      mapHtml += '<div class="cvm-dot" style="left:' + (parseFloat(n.style.left) / CW * 100).toFixed(2) +
+        '%;top:' + (parseFloat(n.style.top) / CH * 100).toFixed(2) + '%"></div>';
+    });
+    map.innerHTML = mapHtml + '<div id="cvMapView"></div>';
+    var mapView = document.getElementById('cvMapView');
+    var px = -(CW - vp.clientWidth) / 2, py = -(CH - vp.clientHeight) / 2, scale = 0.85, zTop = 10;
+    function render() {
+      world.style.transform = 'translate(' + px + 'px,' + py + 'px) scale(' + scale + ')';
+      mapView.style.left = Math.max(0, Math.min(100, -px / scale / CW * 100)) + '%';
+      mapView.style.top = Math.max(0, Math.min(100, -py / scale / CH * 100)) + '%';
+      mapView.style.width = Math.min(100, vp.clientWidth / scale / CW * 100) + '%';
+      mapView.style.height = Math.min(100, vp.clientHeight / scale / CH * 100) + '%';
+    }
+    var dragging = false, sx = 0, sy = 0, moved = false;
+    onFx(vp, 'mousedown', function(e) {
+      dragging = true; moved = false; sx = e.clientX; sy = e.clientY;
+      vp.classList.add('dragging'); e.preventDefault();
+    });
+    onFx(window, 'mousemove', function(e) {
+      if (!dragging) return;
+      var dx = e.clientX - sx, dy = e.clientY - sy;
+      if (Math.abs(dx) + Math.abs(dy) > 2) moved = true;
+      px += dx; py += dy; sx = e.clientX; sy = e.clientY;
+      render();
+    });
+    onFx(window, 'mouseup', function() { dragging = false; vp.classList.remove('dragging'); });
+    onFx(vp, 'wheel', function(e) {
+      e.preventDefault();
+      var old = scale;
+      scale = Math.min(2.2, Math.max(0.3, scale * (e.deltaY > 0 ? 0.92 : 1.08)));
+      var r = vp.getBoundingClientRect();
+      var cx = e.clientX - r.left, cy = e.clientY - r.top;
+      px = cx - (cx - px) * (scale / old);
+      py = cy - (cy - py) * (scale / old);
+      render();
+    }, { passive: false });
+    grid.querySelectorAll('.cv-note').forEach(function(n) {
+      n.addEventListener('click', function() {
+        if (moved) return;
+        zTop++; n.style.zIndex = zTop;
+        openCinematic(+n.dataset.i);
+      });
+    });
+    themeFilter = function(cat) {
+      grid.querySelectorAll('.cv-note').forEach(function(n) {
+        n.style.display = ((n.dataset.cat || '').split(/\s+/).indexOf(cat) !== -1) ? '' : 'none';
+      });
+    };
+    render();
+  }
+
+  // ════ THEME E — ZEN SINGLE FOCUS ════════════════════════════════
+  function buildZen() {
+    grid.innerHTML = '<div id="zenStage">' +
+      '<button class="zen-arr zen-prev" aria-label="previous">&#10229;</button>' +
+      '<button class="zen-arr zen-next" aria-label="next">&#10230;</button>' +
+      '<div id="zenCount"></div>' +
+      '<div class="zen-keys">&#8592; &#8594; to wander &middot; click the image to enter</div>' +
+      '</div>';
+    var stage = document.getElementById('zenStage');
+    var zenList = WORKS.map(function(w, i) { return i; });
+    var zenIdx = 0;
+    function show(n) {
+      var cnt = document.getElementById('zenCount');
+      var old = stage.querySelectorAll('.zen-slide');
+      old.forEach(function(s) { s.classList.remove('zon'); setTimeout(function() { s.remove(); }, 1250); });
+      if (!zenList.length) { if (cnt) cnt.textContent = '00 / 00'; return; }
+      zenIdx = ((n % zenList.length) + zenList.length) % zenList.length;
+      var wi = zenList[zenIdx];
+      var w = WORKS[wi];
+      var slide = document.createElement('div');
+      slide.className = 'zen-slide';
+      slide.innerHTML = '<div class="zen-info">' +
+        '<div class="zen-no">' + pad2(zenIdx) + ' · ' + esc(w.cat).toUpperCase() + '</div>' +
+        '<div class="zen-t">' + esc(w.title) + '</div>' +
+        '<div class="zen-m">' + esc(w.meta) + '</div>' +
+        (w.desc ? '<div class="zen-d">' + esc(w.desc) + '</div>' : '') +
+        '</div>' +
+        '<div class="zen-img">' + (w.src ? '<img src="' + esc(w.src) + '" alt="' + esc(w.title) + '">' : '') + '</div>';
+      slide.querySelector('.zen-img').addEventListener('click', function() { openCinematic(wi); });
+      stage.insertBefore(slide, stage.firstChild);
+      requestAnimationFrame(function() { requestAnimationFrame(function() { slide.classList.add('zon'); }); });
+      if (cnt) cnt.textContent = pad2(zenIdx) + ' / ' + (zenList.length < 10 ? '0' : '') + zenList.length;
+    }
+    stage.querySelector('.zen-prev').addEventListener('click', function() { show(zenIdx - 1); });
+    stage.querySelector('.zen-next').addEventListener('click', function() { show(zenIdx + 1); });
+    onFx(document, 'keydown', function(e) {
+      if (document.documentElement.getAttribute('data-theme') !== 'zen') return;
+      var tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+      if (e.key === 'ArrowRight') { show(zenIdx + 1); e.preventDefault(); }
+      if (e.key === 'ArrowLeft') { show(zenIdx - 1); e.preventDefault(); }
+    });
+    themeFilter = function(cat) {
+      zenList = [];
+      WORKS.forEach(function(w, i) { if (catMatch(w, cat)) zenList.push(i); });
+      show(0);
+    };
+    if (!activeCat()) show(0);
+  }
+
+  // ════ THEME F — ISOMETRIC 3D ════════════════════════════════════
+  function buildIso() {
+    var out = '';
+    WORKS.forEach(function(w, i) {
+      out += '<div class="wi iso-card" data-cat="' + esc(w.cat) + '" data-i="' + i + '">' +
+        '<div class="iso-img">' +
+        (w.src ? '<img src="' + esc(w.src) + '" alt="' + esc(w.title) + '" loading="lazy">' : '') +
+        '</div>' +
+        '<div class="iso-cap">' +
+        '<div class="iso-no">UNIT ' + pad2(i) + ' · ' + esc(w.year) + '</div>' +
+        '<div class="iso-t">' + esc(w.title) + '</div>' +
+        '<div class="iso-m">' + esc(w.meta) + '</div>' +
+        '</div></div>';
+    });
+    grid.innerHTML = out;
+    grid.querySelectorAll('.iso-card').forEach(function(el) {
+      el.addEventListener('click', function() { openCinematic(+el.dataset.i); });
+    });
+  }
+
+  // ════ THEME G — MULTIVERSE ══════════════════════════════════════
+  function buildMultiverse() {
+    var out = '';
+    WORKS.forEach(function(w, i) {
+      out += '<div class="wi mv-card" data-cat="' + esc(w.cat) + '" data-i="' + i + '">' +
+        '<div class="mv-img">' +
+        (w.src ? '<img src="' + esc(w.src) + '" alt="' + esc(w.title) + '" loading="lazy">' : '') +
+        '</div>' +
+        '<div class="mv-cap">' +
+        '<div class="mv-no">DIM-' + pad2(i) + ' // PARALLEL</div>' +
+        '<div class="mv-t">' + esc(w.title) + '</div>' +
+        '<div class="mv-m">' + esc(w.meta) + '</div>' +
+        '</div></div>';
+    });
+    grid.innerHTML = out;
+    grid.querySelectorAll('.mv-card').forEach(function(el) {
+      el.addEventListener('click', function() {
+        document.body.classList.add('mv-shift');
+        setTimeout(function() {
+          document.body.classList.remove('mv-shift');
+          openCinematic(+el.dataset.i);
+        }, 560);
+      });
+    });
+  }
+
+  // ════ THEME H — APPLE EDITORIAL ═════════════════════════════════
+  var apObserver = null;
+  function buildApple() {
+    var groups = [], byCat = {};
+    WORKS.forEach(function(w, i) {
+      var c = (w.cat || 'other').split(/\s+/)[0] || 'other';
+      if (!byCat[c]) { byCat[c] = []; groups.push(c); }
+      byCat[c].push(i);
+    });
+    var out = '';
+    groups.forEach(function(c) {
+      out += '<section class="ap-group" data-cat="' + esc(c) + '">' +
+        '<div class="ap-sticky">' + esc(c) + '<small>' + byCat[c].length + ' work' + (byCat[c].length > 1 ? 's' : '') + '</small></div>';
+      byCat[c].forEach(function(i, k) {
+        var w = WORKS[i];
+        out += '<div class="ap-card' + (k % 2 ? ' ap-rev' : '') + '" data-i="' + i + '">' +
+          '<div class="ap-media">' +
+          (w.src ? '<img src="' + esc(w.src) + '" alt="' + esc(w.title) + '" loading="lazy">' : '') +
+          '</div>' +
+          '<div class="ap-txt">' +
+          '<div class="ap-kicker">Chapter ' + pad2(i) + '</div>' +
+          '<div class="ap-t">' + esc(w.title) + '</div>' +
+          '<div class="ap-m">' + esc(w.meta) + '</div>' +
+          (w.desc ? '<div class="ap-d">' + esc(w.desc) + '</div>' : '') +
+          '<span class="ap-link">View work &#8250;</span>' +
+          '</div></div>';
+      });
+      out += '</section>';
+    });
+    grid.innerHTML = out;
+    if (apObserver) apObserver.disconnect();
+    apObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(en) {
+        if (en.isIntersecting) { en.target.classList.add('in-view'); apObserver.unobserve(en.target); }
+      });
+    }, { threshold: 0.18 });
+    grid.querySelectorAll('.ap-card').forEach(function(el) {
+      apObserver.observe(el);
+      el.addEventListener('click', function() { openCinematic(+el.dataset.i); });
+    });
+    fxCleanup.push(function() { if (apObserver) { apObserver.disconnect(); apObserver = null; } });
+    themeFilter = function(cat) {
+      grid.querySelectorAll('.ap-group').forEach(function(g) {
+        g.style.display = ((g.dataset.cat || '') === cat) ? '' : 'none';
+      });
+      grid.querySelectorAll('.ap-card').forEach(function(c) {
+        if (!c.classList.contains('in-view') && apObserver) apObserver.observe(c);
+      });
+    };
+  }
+
+  // ════ THEME I — CYBERPUNK CAPSULE ═══════════════════════════════
+  var cyAngle = 0, cyList = [];
+  function cyRender() {
+    var ring = document.getElementById('cyRing');
+    if (!ring) return;
+    var n = Math.max(cyList.length, 1);
+    var step = 360 / n;
+    var radius = n < 3 ? 260 : Math.max(420, Math.round(180 / Math.tan(Math.PI / n)));
+    ring.style.transform = 'translateZ(' + (-radius) + 'px) rotateY(' + cyAngle + 'deg)';
+    ring.querySelectorAll('.cy-card').forEach(function(c, i) {
+      c.style.transform = 'rotateY(' + (i * step) + 'deg) translateZ(' + radius + 'px)';
+    });
+    var cur = ((Math.round(-cyAngle / step) % n) + n) % n;
+    var idxEl = document.querySelector('.cy-idx');
+    if (idxEl) idxEl.textContent = cyList.length ? 'POD ' + pad2(cur) + ' / ' + (n < 10 ? '0' : '') + n : 'NO PODS';
+  }
+  function cyBuildRing() {
+    var ring = document.getElementById('cyRing');
+    if (!ring) return;
+    var out = '';
+    cyList.forEach(function(wi) {
+      var w = WORKS[wi];
+      out += '<div class="cy-card" data-i="' + wi + '">' +
+        '<span class="cyc-stat">&#9679; LIVE</span>' +
+        (w.src ? '<img src="' + esc(w.src) + '" alt="' + esc(w.title) + '" loading="lazy">' : '') +
+        '<div class="cyc-cap">' +
+        '<div class="cyc-no">POD-' + pad2(wi) + ' · SEC ' + esc(w.year) + '</div>' +
+        '<div class="cyc-t">' + esc(w.title) + '</div>' +
+        '<div class="cyc-m">' + esc(w.meta) + '</div>' +
+        '</div></div>';
+    });
+    ring.innerHTML = out;
+    ring.querySelectorAll('.cy-card').forEach(function(el) {
+      el.addEventListener('click', function() { openCinematic(+el.dataset.i); });
+    });
+    cyRender();
+  }
+  function buildCyber() {
+    grid.innerHTML =
+      '<div id="cyDeck">' +
+      '<span class="cy-corner tl"></span><span class="cy-corner tr"></span>' +
+      '<span class="cy-corner bl"></span><span class="cy-corner br"></span>' +
+      '<div class="cy-hud hud-tl"><span class="blink"></span>SYS.ONLINE · PWR <b>98.2%</b> · O2 <b>100%</b></div>' +
+      '<div class="cy-hud hud-tr">LAT 25.0330 N · LON 121.5654 E<br>ORBIT <b>STABLE</b> · SIG <b>-42dBm</b></div>' +
+      '<div class="cy-hud hud-bl">ARCHIVE.MODULE // WU WEI-CHIEH · <b id="cyClock">T+00:00:00</b></div>' +
+      '<div id="cyStage"><div id="cyRing"></div></div>' +
+      '<div class="cy-nav"><button id="cyPrev">&#9664; PREV</button><span class="cy-idx"></span><button id="cyNext">NEXT &#9654;</button></div>' +
+      '</div>';
+    cyList = WORKS.map(function(w, i) { return i; });
+    cyAngle = 0;
+    cyBuildRing();
+    function spin(dir) { cyAngle += dir * (360 / Math.max(cyList.length, 1)); cyRender(); }
+    document.getElementById('cyPrev').addEventListener('click', function() { spin(1); });
+    document.getElementById('cyNext').addEventListener('click', function() { spin(-1); });
+    var clock = document.getElementById('cyClock');
+    var t0 = Date.now();
+    ivFx(function() {
+      if (!document.getElementById('cyClock')) return;
+      var s = Math.floor((Date.now() - t0) / 1000);
+      var hh = String(Math.floor(s / 3600)).padStart(2, '0');
+      var mm = String(Math.floor(s / 60) % 60).padStart(2, '0');
+      var ss = String(s % 60).padStart(2, '0');
+      clock.textContent = 'T+' + hh + ':' + mm + ':' + ss;
+    }, 1000);
+    onFx(document, 'keydown', function(e) {
+      if (document.documentElement.getAttribute('data-theme') !== 'cyber') return;
+      var tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+      if (e.key === 'ArrowRight') { spin(-1); e.preventDefault(); }
+      if (e.key === 'ArrowLeft') { spin(1); e.preventDefault(); }
+    });
+    themeFilter = function(cat) {
+      cyList = [];
+      WORKS.forEach(function(w, i) { if (catMatch(w, cat)) cyList.push(i); });
+      cyAngle = 0;
+      cyBuildRing();
+    };
+  }
+
