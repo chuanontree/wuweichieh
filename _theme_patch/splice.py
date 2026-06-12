@@ -1,4 +1,4 @@
-import io
+import io, re
 html = io.open('index.html', encoding='utf-8').read()
 css = io.open('_theme_patch/themes_css.txt', encoding='utf-8').read()
 js = io.open('_theme_patch/themes_js.txt', encoding='utf-8').read()
@@ -7,9 +7,9 @@ anchor = "[data-theme=\"void\"] footer::after { content:' // CONNECTION TERMINAT
 assert html.count(anchor) == 1
 html = html.replace(anchor, anchor.replace("\n</style>", "\n" + css + "\n</style>"))
 
-ja = "  // ════ DEFAULT restore ═══════════════════════════════════════════════════"
-assert html.count(ja) == 1
-html = html.replace(ja, js + ja)
+m = re.search(u"(?m)^  // ═+ DEFAULT restore ═+$", html)
+assert m
+html = html[:m.start()] + js + html[m.start():]
 
 old = """    teardownHorizontalScroll();
     if (theme === 'brutal') { buildBrutal(); initHorizontalScroll(); }
