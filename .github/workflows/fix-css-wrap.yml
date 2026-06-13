@@ -1,10 +1,10 @@
-name: Fix CSS Wrapping
+name: Restore index.html
 on:
   push:
     paths:
-      - 'fix_css.py'
+      - 'RESTORE_TRIGGER'
 jobs:
-  fix:
+  restore:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -13,15 +13,16 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Fix CSS wrapping
-        run: python3 fix_css.py
+      - name: Restore index.html from last good commit
+        run: |
+          git checkout e80ea23fd6a89afe0df395a6bc6f49a9e86bd5a3 -- index.html
       - name: Commit and cleanup
         run: |
-          rm -f fix_css.py
+          rm -f fix_css.py RESTORE_TRIGGER
           rm -f .github/workflows/fix-css-wrap.yml
           git config user.email "noreply@anthropic.com"
           git config user.name "Claude"
-          git add index.html
+          git add -A
           git diff --cached --stat
-          git commit -m "Fix: wrap injected CSS in style tags" || echo "nothing to commit"
+          git commit -m "Restore working index.html (revert broken theme apply)" || echo "nothing to commit"
           git push
