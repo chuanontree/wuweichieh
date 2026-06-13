@@ -4772,11 +4772,11 @@ const wwcChat = (function () {
   window.initScrollAnimations = function() {
     ScrollTrigger.getAll().forEach(function(st) { st.kill(); });
     gsap.utils.toArray('.eyr').forEach(function(el, i) {
-      gsap.from(el, { scrollTrigger: { trigger: el, start: 'top 88%', toggleActions: 'play none none none' }, opacity: 0, x: -30, duration: 0.6, delay: i * 0.1, ease: 'power2.out' });
+      gsap.from(el, { scrollTrigger: { trigger: el, start: 'top 92%', toggleActions: 'play none none none' }, immediateRender: false, clearProps: 'opacity,transform', opacity: 0, x: -30, duration: 0.6, delay: i * 0.05, ease: 'power2.out' });
     });
     var aboutImg = document.querySelector('.al2 img');
-    if (aboutImg) { gsap.from(aboutImg, { scrollTrigger: { trigger: aboutImg, start: 'top 80%' }, opacity: 0, scale: 0.85, duration: 0.9, ease: 'back.out(1.5)' }); }
-    gsap.utils.toArray('.sh').forEach(function(el) { gsap.from(el, { scrollTrigger: { trigger: el, start: 'top 85%' }, opacity: 0, y: 20, duration: 0.5, ease: 'power2.out' }); });
+    if (aboutImg) { gsap.from(aboutImg, { scrollTrigger: { trigger: aboutImg, start: 'top 90%' }, immediateRender: false, clearProps: 'opacity,transform', opacity: 0, scale: 0.85, duration: 0.9, ease: 'back.out(1.5)' }); }
+    gsap.utils.toArray('.sh').forEach(function(el) { gsap.from(el, { scrollTrigger: { trigger: el, start: 'top 92%' }, immediateRender: false, clearProps: 'opacity,transform', opacity: 0, y: 20, duration: 0.5, ease: 'power2.out' }); });
   };
   window.staggerWorkItems = function() {
     var items = document.querySelectorAll('.wi');
@@ -5025,6 +5025,20 @@ function createMedievalHelmet(containerId) {
   animate2();
   container._cleanup = function() { cancelAnimationFrame(frame2); renderer.dispose(); };
 }
+</script>
+
+<script>
+/* wwcCvSafety: ensure tab content never stays hidden by GSAP */
+(function(){
+  function reveal(){
+    document.querySelectorAll('.eyr,.sh,.al2 img').forEach(function(el){
+      if (getComputedStyle(el).opacity === '0') { el.style.opacity='1'; el.style.transform='none'; }
+    });
+    if (window.ScrollTrigger) { try { ScrollTrigger.refresh(); } catch(e){} }
+  }
+  if (window.pg) { var _pg = window.pg; window.pg = function(n,b){ _pg(n,b); setTimeout(reveal, 80); }; }
+  window.addEventListener('load', function(){ setTimeout(reveal, 1200); });
+})();
 </script>
 </body>
 </html>
