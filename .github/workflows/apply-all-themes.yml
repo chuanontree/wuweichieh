@@ -1,0 +1,29 @@
+name: Apply All Themes
+on:
+  push:
+    paths:
+      - 'jm_base.py'
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply N/O themes + GSAP + 3D
+        run: python3 apply_changes.py
+      - name: Apply J-M base themes
+        run: python3 jm_base.py
+      - name: Commit and cleanup
+        run: |
+          rm -f apply_changes.py jm_base.py
+          rm -f .github/workflows/apply-all-themes.yml .github/workflows/apply-theme-patch.yml
+          git config user.email "noreply@anthropic.com"
+          git config user.name "Claude"
+          git add -A
+          git diff --cached --stat
+          git commit -m "Add themes J-O (Baroque/Bauhaus/PopArt/Newspaper/Chinese/Medieval) + GSAP + 3D models" || echo "nothing to commit"
+          git push
