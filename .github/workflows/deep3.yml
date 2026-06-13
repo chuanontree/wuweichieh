@@ -1,0 +1,27 @@
+name: Deep3
+on:
+  push:
+    paths:
+      - 'deep3.py'
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply deep-3 redesign
+        run: python3 deep3.py
+      - name: Commit and cleanup
+        run: |
+          rm -f deep3.py
+          rm -f .github/workflows/deep3.yml
+          git config user.email "noreply@anthropic.com"
+          git config user.name "Claude"
+          git add -A
+          git diff --cached --stat
+          git commit -m "Deep redesign: chinese/cyber/y2k about+cv+gallery+AI layouts & interactions" || echo "nothing to commit"
+          git push
