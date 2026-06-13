@@ -1,0 +1,27 @@
+name: Works3
+on:
+  push:
+    paths:
+      - 'works3.py'
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply chinese works handscroll
+        run: python3 works3.py
+      - name: Commit and cleanup
+        run: |
+          rm -f works3.py
+          rm -f .github/workflows/works3.yml
+          git config user.email "noreply@anthropic.com"
+          git config user.name "Claude"
+          git add -A
+          git diff --cached --stat
+          git commit -m "Redesign chinese works as horizontal ink handscroll + drag/wheel" || echo "nothing to commit"
+          git push
