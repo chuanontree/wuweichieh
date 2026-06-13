@@ -1,0 +1,30 @@
+name: Apply Theme Patch
+on:
+  push:
+    paths:
+      - '_patch/theme_patch.diff'
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/full-redesign-v1
+          fetch-depth: 0
+      - name: Apply patch
+        run: |
+          git apply --ignore-whitespace _patch/theme_patch.diff || git apply --reject --ignore-whitespace _patch/theme_patch.diff
+      - name: Remove patch and workflow
+        run: |
+          rm -rf _patch .github/workflows/apply-patch.yml
+      - name: Commit
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git add index.html
+          git status
+          git diff --cached --stat
+          git commit -m "Add N/O themes (Chinese+Medieval), GSAP animations, 3D models" || echo "nothing to commit"
+          git push
