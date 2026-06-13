@@ -1,8 +1,8 @@
-name: Apply Theme Patch
+name: Apply Theme Changes
 on:
   push:
     paths:
-      - '_patch/theme_patch.diff'
+      - 'apply_changes.py'
 jobs:
   apply:
     runs-on: ubuntu-latest
@@ -13,15 +13,15 @@ jobs:
         with:
           ref: claude/full-redesign-v1
           fetch-depth: 0
-      - name: Apply patch
-        run: |
-          git apply --ignore-whitespace --whitespace=nowarn _patch/theme_patch.diff
+      - name: Apply theme changes
+        run: python3 apply_changes.py
       - name: Cleanup and commit
         run: |
+          rm -f apply_changes.py
           rm -rf _patch .github/workflows/apply-theme-patch.yml
           git config user.email "noreply@anthropic.com"
           git config user.name "Claude"
           git add index.html
           git diff --cached --stat
-          git commit -m "Add N/O themes (Chinese+Medieval), GSAP animations, 3D models, full-site CSS coverage"
+          git commit -m "Add N/O themes (Chinese+Medieval), GSAP animations, 3D models, full-site CSS coverage" || echo "nothing to commit"
           git push
