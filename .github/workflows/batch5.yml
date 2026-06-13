@@ -1,0 +1,27 @@
+name: Batch5
+on:
+  push:
+    paths:
+      - 'batch5.py'
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply deep batch 5
+        run: python3 batch5.py
+      - name: Commit and cleanup
+        run: |
+          rm -f batch5.py
+          rm -f .github/workflows/batch5.yml
+          git config user.email "noreply@anthropic.com"
+          git config user.name "Claude"
+          git add -A
+          git diff --cached --stat
+          git commit -m "Deep batch 5 (final): iso/crystal about+cv layouts & interactions" || echo "nothing to commit"
+          git push
