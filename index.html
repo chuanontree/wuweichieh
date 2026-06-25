@@ -1423,7 +1423,7 @@ body.edit .drag-handle{display:flex}
     <button class="ni" onclick="pg('about',this)">About</button>
     <button class="ni" onclick="pg('cv',this)">CV</button>
     <button class="ni" onclick="pg('gallery',this)">Gallery</button>
-    <div id="themeSwitch"><label class="style-lab">Style</label><select id="themeSelect" onchange="applyTheme(this.value)"><option value="default">◉ Original</option><option value="brutal">A · Editorial Brutal</option><option value="luxury">B · Liquid Luxury</option><option value="void">C · Systemic Void</option><option value="canvas">D · Infinite Canvas</option><option value="zen">E · Zen Focus</option><option value="iso">F · Isometric 3D</option><option value="multiverse">G · Multiverse</option><option value="apple">H · Apple Editorial</option><option value="cyber">I · Cyberpunk</option><option value="baroque">J · Baroque</option><option value="bauhaus">K · Bauhaus</option><option value="popart">L · Pop Art</option><option value="newspaper">M · Newspaper</option><option value="chinese">N · 水墨丹青</option><option value="medieval">O · 鋼鐵誓約</option><option value="sky">P · 天空懸浮</option><option value="crystal">Q · 水晶</option><option value="y2k">R · Y2K 液態金屬</option><option value="circuit">S · 電路板</option><option value="garden">T · 花園</option></select></div>
+    <div id="themeSwitch"><label class="style-lab">Style</label><select id="themeSelect" onchange="applyTheme(this.value)"><option value="default">◉ Original</option><option value="void">C · Systemic Void</option><option value="canvas">D · Infinite Canvas</option><option value="multiverse">G · Multiverse</option><option value="apple">H · Apple Editorial</option><option value="cyber">I · Cyberpunk</option></select></div>
     <button id="editBtn" onclick="toggleEdit()">Edit</button>
   </nav>
 </header>
@@ -5119,12 +5119,9 @@ const wwcChat = (function () {
   function rebuildWorksGrid(theme) {
     teardownHorizontalScroll();
     teardownThemeFx();
-    if (theme === 'brutal') { buildBrutal(); initHorizontalScroll(); }
-    else if (theme === 'luxury') { buildLuxury(); ensureLuxOverlay(); }
+    if (theme === '__removed__') { }
     else if (theme === 'void') { buildVoid(); }
     else if (theme === 'canvas') { buildCanvas(); ensureLuxOverlay(); }
-    else if (theme === 'zen') { buildZen(); ensureLuxOverlay(); }
-    else if (theme === 'iso') { buildIso(); ensureLuxOverlay(); }
     else if (theme === 'multiverse') { buildMultiverse(); ensureLuxOverlay(); }
     else if (theme === 'apple') { buildApple(); ensureLuxOverlay(); }
     else if (theme === 'cyber') { buildCyber(); ensureLuxOverlay(); }
@@ -5138,6 +5135,7 @@ const wwcChat = (function () {
   }
 
   function applyTheme(theme) {
+    var _del=['brutal','luxury','zen','iso','baroque','bauhaus','popart','newspaper','chinese','medieval','sky','crystal','y2k','circuit','garden'];if(_del.indexOf(theme)!==-1)theme='default';
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('wwc-theme', theme);
     rebuildWorksGrid(theme);
