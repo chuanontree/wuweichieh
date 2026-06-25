@@ -4530,6 +4530,7 @@ const wwcChat = (function () {
         link: a ? a.getAttribute('href') : '',
         title: wt ? wt.textContent.trim() : 'UNTITLED',
         meta: wm ? wm.textContent.trim() : '',
+        metaHtml: wm ? wm.innerHTML : '',
         desc: ''
       };
       var ym = w.meta.match(/20\d\d/);
@@ -4559,7 +4560,7 @@ const wwcChat = (function () {
       var txt = '<div class="bru-txt">' +
         '<div class="bru-idx">N°' + pad2(i) + ' / ' + esc(w.cat).toUpperCase() + '</div>' +
         '<div class="bru-t">' + esc(w.title) + '</div>' +
-        '<div class="bru-m">' + esc(w.meta) + '</div>' +
+        '<div class="bru-m">' + w.metaHtml || esc(w.meta) + '</div>' +
         (w.desc ? '<div class="bru-d">' + esc(w.desc) + '</div>' : '') +
         '</div>';
       var open = w.link ? ' onclick="window.open(\'' + esc(w.link) + '\',\'_blank\')"' : '';
@@ -4636,7 +4637,7 @@ const wwcChat = (function () {
         '<div class="lux-cap">' +
         '<div class="lux-no">— ' + pad2(i) + ' —</div>' +
         '<div class="lux-t">' + esc(w.title) + '</div>' +
-        '<div class="lux-m">' + esc(w.meta) + '</div>' +
+        '<div class="lux-m">' + w.metaHtml || esc(w.meta) + '</div>' +
         '</div></div>';
     });
     grid.innerHTML = out;
@@ -4693,7 +4694,7 @@ const wwcChat = (function () {
       '<span class="k">$ stat --work</span>\n' +
       '<span class="k">TITLE.....:</span> ' + esc(w.title) + '\n' +
       '<span class="k">TYPE......:</span> ' + esc(w.cat) + '\n' +
-      '<span class="k">META......:</span> ' + esc(w.meta) + '\n' +
+      '<span class="k">META......:</span> ' + w.metaHtml || esc(w.meta) + '\n' +
       (w.desc ? '<span class="k">README....:</span> ' + esc(w.desc) : '');
     f.classList.add('open');
   }
@@ -4817,7 +4818,7 @@ const wwcChat = (function () {
         '<span class="cv-pin">N°' + pad2(i) + '</span>' +
         (w.src ? '<img src="' + esc(w.src) + '" alt="' + esc(w.title) + '" loading="lazy">' : '') +
         '<div class="cv-t">' + esc(w.title) + '</div>' +
-        '<div class="cv-m">' + esc(w.meta) + '</div>' +
+        '<div class="cv-m">' + w.metaHtml || esc(w.meta) + '</div>' +
         '</div>';
     });
     grid.innerHTML =
@@ -4904,7 +4905,7 @@ const wwcChat = (function () {
       slide.innerHTML = '<div class="zen-info">' +
         '<div class="zen-no">' + pad2(zenIdx) + ' · ' + esc(w.cat).toUpperCase() + '</div>' +
         '<div class="zen-t">' + esc(w.title) + '</div>' +
-        '<div class="zen-m">' + esc(w.meta) + '</div>' +
+        '<div class="zen-m">' + w.metaHtml || esc(w.meta) + '</div>' +
         (w.desc ? '<div class="zen-d">' + esc(w.desc) + '</div>' : '') +
         '</div>' +
         '<div class="zen-img">' + (w.src ? '<img src="' + esc(w.src) + '" alt="' + esc(w.title) + '">' : '') + '</div>';
@@ -4941,7 +4942,7 @@ const wwcChat = (function () {
         '<div class="iso-cap">' +
         '<div class="iso-no">UNIT ' + pad2(i) + ' · ' + esc(w.year) + '</div>' +
         '<div class="iso-t">' + esc(w.title) + '</div>' +
-        '<div class="iso-m">' + esc(w.meta) + '</div>' +
+        '<div class="iso-m">' + w.metaHtml || esc(w.meta) + '</div>' +
         '</div></div>';
     });
     grid.innerHTML = out;
@@ -4961,7 +4962,7 @@ const wwcChat = (function () {
         '<div class="mv-cap">' +
         '<div class="mv-no">DIM-' + pad2(i) + ' // PARALLEL</div>' +
         '<div class="mv-t">' + esc(w.title) + '</div>' +
-        '<div class="mv-m">' + esc(w.meta) + '</div>' +
+        '<div class="mv-m">' + w.metaHtml || esc(w.meta) + '</div>' +
         '</div></div>';
     });
     grid.innerHTML = out;
@@ -4998,7 +4999,7 @@ const wwcChat = (function () {
           '<div class="ap-txt">' +
           '<div class="ap-kicker">Chapter ' + pad2(i) + '</div>' +
           '<div class="ap-t">' + esc(w.title) + '</div>' +
-          '<div class="ap-m">' + esc(w.meta) + '</div>' +
+          '<div class="ap-m">' + w.metaHtml || esc(w.meta) + '</div>' +
           (w.desc ? '<div class="ap-d">' + esc(w.desc) + '</div>' : '') +
           '<span class="ap-link">View work &#8250;</span>' +
           '</div></div>';
@@ -5055,7 +5056,7 @@ const wwcChat = (function () {
         '<div class="cyc-cap">' +
         '<div class="cyc-no">POD-' + pad2(wi) + ' · SEC ' + esc(w.year) + '</div>' +
         '<div class="cyc-t">' + esc(w.title) + '</div>' +
-        '<div class="cyc-m">' + esc(w.meta) + '</div>' +
+        '<div class="cyc-m">' + w.metaHtml || esc(w.meta) + '</div>' +
         '</div></div>';
     });
     ring.innerHTML = out;
