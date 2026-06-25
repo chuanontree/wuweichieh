@@ -6,7 +6,6 @@ with open('index.html', 'r', encoding='utf-8') as f:
     html = f.read()
 orig = len(html)
 
-# The wm div was inserted with wrong text - replace it with correct text
 old_wm = (
     '<div class="wm" contenteditable="true">Video &middot; 2026 &middot; 點擊前往 YouTube'
     '&nbsp;<div>創作團隊：武威栗 陳彥甫 林慧儲 楊茗柯 鄭欣宜 謝浩理 林廣騎 江育瘍</div>'
@@ -26,9 +25,9 @@ new_wm = (
 
 if old_wm in html:
     html = html.replace(old_wm, new_wm, 1)
-    print('Fixed team names and description.')
+    print('Fixed.')
 else:
-    print('ERROR: old_wm pattern not found.')
+    print('ERROR: pattern not found.')
 
 with open('index.html', 'w', encoding='utf-8') as f:
     f.write(html)
