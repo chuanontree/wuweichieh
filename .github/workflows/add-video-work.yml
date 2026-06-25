@@ -1,0 +1,27 @@
+name: Add Video Work
+on:
+  push:
+    paths:
+      - 'add_video_work.py'
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply changes
+        run: python3 add_video_work.py
+      - name: Commit and cleanup
+        run: |
+          rm -f add_video_work.py
+          rm -f .github/workflows/add-video-work.yml
+          git config user.email "noreply@anthropic.com"
+          git config user.name "Claude"
+          git add -A
+          git diff --cached --stat
+          git commit -m "Add artwork: 限時動態 Action! Figure (2026) to video tab" || echo "nothing to commit"
+          git push
