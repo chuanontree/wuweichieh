@@ -6,7 +6,6 @@ with open('index.html', 'r', encoding='utf-8') as f:
 orig = len(html)
 count = 0
 
-# Revert: remove metaHtml extraction line
 old_extract = "meta: wm ? wm.textContent.trim() : '',\n        metaHtml: wm ? wm.innerHTML : '',"
 new_extract = "meta: wm ? wm.textContent.trim() : '',"
 if old_extract in html:
@@ -16,7 +15,6 @@ if old_extract in html:
 else:
     print('WARNING: extraction pattern not found')
 
-# Revert: restore esc(w.meta) from w.metaHtml || esc(w.meta)
 html_new = html.replace("w.metaHtml || esc(w.meta)", "esc(w.meta)")
 replaced = html.count("w.metaHtml || esc(w.meta)") - html_new.count("w.metaHtml || esc(w.meta)")
 html = html_new
