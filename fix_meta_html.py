@@ -6,7 +6,6 @@ with open('index.html', 'r', encoding='utf-8') as f:
 orig = len(html)
 count = 0
 
-# 1. In extraction, also store metaHtml (innerHTML preserving <br> and <div>)
 old_extract = "meta: wm ? wm.textContent.trim() : '',"
 new_extract = "meta: wm ? wm.textContent.trim() : '',\n        metaHtml: wm ? wm.innerHTML : '',"
 if old_extract in html:
@@ -16,9 +15,6 @@ if old_extract in html:
 else:
     print('WARNING: extraction pattern not found')
 
-# 2. Replace all esc(w.meta) usages in build functions with w.metaHtml (except textContent line)
-import re
-# Replace in innerHTML-context build functions (all occurrences of esc(w.meta) inside string concatenation)
 html_new = html.replace("esc(w.meta)", "w.metaHtml || esc(w.meta)")
 replaced = html.count("esc(w.meta)") - html_new.count("esc(w.meta)")
 html = html_new
