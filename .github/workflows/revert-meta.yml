@@ -1,0 +1,27 @@
+name: Revert Meta HTML
+on:
+  push:
+    paths:
+      - 'revert_meta.py'
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Revert
+        run: python3 revert_meta.py
+      - name: Commit and cleanup
+        run: |
+          rm -f revert_meta.py
+          rm -f .github/workflows/revert-meta.yml
+          git config user.email "noreply@anthropic.com"
+          git config user.name "Claude"
+          git add -A
+          git diff --cached --stat
+          git commit -m "Revert: undo fix_meta_html changes (broke the site)" || echo "nothing to commit"
+          git push
