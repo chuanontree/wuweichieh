@@ -14,7 +14,7 @@ replacements = [
 ]
 for old, new in replacements:
     html = html.replace(old, new)
-    print(f'{old!r} -> {new!r}')
+    print(repr(old), '->', repr(new))
 
 with open('index.html', 'w', encoding='utf-8') as f:
     f.write(html)
