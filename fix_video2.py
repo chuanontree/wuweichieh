@@ -6,7 +6,6 @@ with open('index.html', 'r', encoding='utf-8') as f:
     html = f.read()
 orig = len(html)
 
-# Match the entire wm div for this video item and replace it
 old = (
     '<div class="wm" contenteditable="true">Video &middot; 2026 &middot; 點擊前往 YouTube'
     '&nbsp;<div>創作團隊：武威桁 陳彥甫 林慧儲 楊茗柯 鄭欣宜 謝浩理 林廣騎 江育瘍</div>'
@@ -23,14 +22,10 @@ if old in html:
     html = html.replace(old, new, 1)
     print('Fixed.')
 else:
-    print('Exact match not found, trying broader search...')
-    # Find and show what's actually there
+    print('Exact match not found.')
     idx = html.find('WQ0qF_Lh0-k')
     if idx != -1:
-        chunk = html[idx:idx+800]
-        print('Found at idx', idx, ':', repr(chunk))
-    else:
-        print('Video item not found at all.')
+        print('Video found at', idx, ':', repr(html[idx:idx+600]))
 
 with open('index.html', 'w', encoding='utf-8') as f:
     f.write(html)
