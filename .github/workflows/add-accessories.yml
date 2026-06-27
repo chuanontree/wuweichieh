@@ -1,0 +1,21 @@
+name: Assemble accessories
+on:
+  push:
+    paths:
+      - 'add_accessories.py'
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run assembly script
+        run: python add_accessories.py
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Add accessories images and patch index.html" || exit 0
+          git push
