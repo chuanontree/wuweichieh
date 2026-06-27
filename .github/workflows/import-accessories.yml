@@ -1,0 +1,81 @@
+name: Import accessories from Drive
+on:
+  push:
+    paths:
+      - '.github/workflows/import-accessories.yml'
+  workflow_dispatch: {}
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Download and convert images
+        run: |
+          set -e
+          mkdir -p assets/acc
+          ids=(\
+            "1fowvfU2w8qAVJhU2NagMLV9s1BepB_7B" \
+            "14DxlUsPKHpOeH7ZOE6f2DNDpnigi-Hd5" \
+            "1fCXpv3o-47TVo8ZHgANnInc1COZ5J8SB" \
+            "1Mlv3j7HVGwM6o1PNUMJNdJghIpn_Lq_7" \
+            "1RhfQs9kE3V1I9-WFBvMutWjXHPpt_IXM" \
+            "1qjKx0Lnce2wgkO-gEH7K1QGycOSnWr6C" \
+            "1G2riUqujLdJ1zOo2u1dROyGo9uIp6XjJ" \
+            "1F0J14Fo4TnxmLYTLRVPn6jn3kZrg2JGW" \
+            "1aOqqZNMtY4bSmJRnnIuMUC-dBu_LOzj0" \
+            "1l4jUJkpW0fxrvjc36sxw2X21d5rVUcJy" \
+            "1l-lZ1eZicwGNNMfVcOUEiXiDa11wEZ1S" \
+            "1epetl5uiWZlkdUF9MMxVrASndM0mh6uH" \
+            "1G5QZxDFMQSKVm2LZuhQBntdz-dWorObh" \
+            "1GvZw6cDleOBKe_n-SvYXVk7UYTI6m9I8" \
+            "1WbchLK87yc7IL8IUi8UEfNbKqCCupn9W" \
+          )
+          i=1
+          for id in "${ids[@]}"; do
+            n=$(printf '%02d' $i)
+            echo "Downloading acc$n (id=$id)"
+            curl -sSL "https://drive.usercontent.google.com/download?id=$id&export=download&confirm=t" -o raw_$n
+            echo "  raw size: $(stat -c%s raw_$n)"
+            file raw_$n
+            convert raw_$n -background white -flatten -auto-orient -resize '1100x1100>' -quality 85 assets/acc/acc$n.jpg
+            echo "  jpg size: $(stat -c%s assets/acc/acc$n.jpg)"
+            i=$((i+1))
+          done
+      - name: Patch index.html
+        run: |
+          python3 - <<'PY'
+          marker = '</div><!-- /grid -->'
+          with open('index.html', encoding='utf-8') as f:
+              html = f.read()
+          if 'assets/acc/acc01.jpg' in html:
+              print('Already patched; skipping')
+          else:
+              items = ''
+              for i in range(1, 16):
+                  n = '%02d' % i
+                  items += (
+                      f'<div class=\"wi fi vis\" data-cat=\"accessories\" data-src=\"assets/acc/acc{n}.jpg\" style=\"\" draggable=\"false\">\n'
+                      f'      <img src=\"assets/acc/acc{n}.jpg\" alt=\"acc{n}\" loading=\"lazy\">\n'
+                      f'      <div class=\"wio\"><div class=\"wt\" contenteditable=\"true\">Accessories</div><div class=\"wm\" contenteditable=\"true\">WWC Studio · Jewelry Design</div></div>\n'
+                      f'      <button class=\"db\" onclick=\"di(this.parentElement)\">✕</button>\n'
+                      f'    </div>\n'
+                  )
+              if marker not in html:
+                  raise SystemExit('grid marker not found')
+              html = html.replace(marker, items + marker)
+              with open('index.html', 'w', encoding='utf-8') as f:
+                  f.write(html)
+              print('Patched index.html with 15 accessory items')
+          PY
+      - name: Commit
+        run: |
+          rm -f raw_* "$GITHUB_WORKSPACE/.github/workflows/import-accessories.yml"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Add 15 accessory images and gallery items" || { echo 'nothing to commit'; exit 0; }
+          git push
