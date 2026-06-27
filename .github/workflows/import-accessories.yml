@@ -13,10 +13,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
-      - name: Download and convert images
+      - name: Install Pillow
+        run: pip install Pillow
+      - name: Download images
         run: |
           set -e
-          mkdir -p assets/acc
+          mkdir -p assets/acc raw
           ids=(\
             "1fowvfU2w8qAVJhU2NagMLV9s1BepB_7B" \
             "14DxlUsPKHpOeH7ZOE6f2DNDpnigi-Hd5" \
@@ -38,21 +40,37 @@ jobs:
           for id in "${ids[@]}"; do
             n=$(printf '%02d' $i)
             echo "Downloading acc$n (id=$id)"
-            curl -sSL "https://drive.usercontent.google.com/download?id=$id&export=download&confirm=t" -o raw_$n
-            echo "  raw size: $(stat -c%s raw_$n)"
-            file raw_$n
-            convert raw_$n -background white -flatten -auto-orient -resize '1100x1100>' -quality 85 assets/acc/acc$n.jpg
-            echo "  jpg size: $(stat -c%s assets/acc/acc$n.jpg)"
+            curl -sSL "https://drive.usercontent.google.com/download?id=$id&export=download&confirm=t" -o raw/$n
+            echo "  raw size: $(stat -c%s raw/$n)"
             i=$((i+1))
           done
-      - name: Patch index.html
+      - name: Convert and patch
         run: |
           python3 - <<'PY'
+          from PIL import Image, ImageOps
+          import os
+          os.makedirs('assets/acc', exist_ok=True)
+          for i in range(1, 16):
+              n = '%02d' % i
+              im = Image.open(f'raw/{n}')
+              im = ImageOps.exif_transpose(im)
+              if im.mode in ('RGBA', 'P', 'LA'):
+                  bg = Image.new('RGB', im.size, (255, 255, 255))
+                  im = im.convert('RGBA')
+                  bg.paste(im, mask=im.split()[-1])
+                  im = bg
+              else:
+                  im = im.convert('RGB')
+              im.thumbnail((1100, 1100), Image.LANCZOS)
+              out = f'assets/acc/acc{n}.jpg'
+              im.save(out, 'JPEG', quality=85, optimize=True)
+              print(f'{out}: {os.path.getsize(out)} bytes, {im.size}')
+
           marker = '</div><!-- /grid -->'
           with open('index.html', encoding='utf-8') as f:
               html = f.read()
           if 'assets/acc/acc01.jpg' in html:
-              print('Already patched; skipping')
+              print('index.html already patched; skipping')
           else:
               items = ''
               for i in range(1, 16):
@@ -73,7 +91,7 @@ jobs:
           PY
       - name: Commit
         run: |
-          rm -f raw_* "$GITHUB_WORKSPACE/.github/workflows/import-accessories.yml"
+          rm -rf raw "$GITHUB_WORKSPACE/.github/workflows/import-accessories.yml"
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
