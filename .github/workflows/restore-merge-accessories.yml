@@ -1,0 +1,28 @@
+name: Restore and merge accessories
+on:
+  push:
+    paths:
+      - '.github/workflows/restore-merge-accessories.yml'
+  workflow_dispatch: {}
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Run restore script
+        run: |
+          echo 'aW1wb3J0IHJlLCBvcywgc3VicHJvY2VzcwoKT0xEX1JFRiA9ICdhNGYzZDJiNTgzNjdkYmQ2ZDg3MTZkZGI4MWFmYzlhNjhkMDIzMDA3JyAgIyBjb21taXQgd2l0aCBvcmlnaW5hbCAxNSBhY2Nlc3NvcnkgaW1hZ2VzCgojIDEpIGN1cnJlbnQgYWNjMDEtMTYgYXJlIHRoZSBORVcgaW1hZ2VzOyBzaGlmdCB0aGVtIHRvIGFjYzE2LTMxIChkZXNjZW5kaW5nIHRvIGF2b2lkIGNvbGxpc2lvbikKZm9yIGkgaW4gcmFuZ2UoMTYsIDAsIC0xKToKICAgIHNyYyA9ICdhc3NldHMvYWNjL2FjYyUwMmQuanBnJyAlIGkKICAgIGRzdCA9ICdhc3NldHMvYWNjL2FjYyUwMmQuanBnJyAlIChpICsgMTUpCiAgICBvcy5yZW5hbWUoc3JjLCBkc3QpCgojIDIpIHJlc3RvcmUgb3JpZ2luYWwgMTUgaW1hZ2VzIGZyb20gZ2l0IGhpc3RvcnkgaW50byBhY2MwMS0xNQpmb3IgaSBpbiByYW5nZSgxLCAxNik6CiAgICBwYXRoID0gJ2Fzc2V0cy9hY2MvYWNjJTAyZC5qcGcnICUgaQogICAgZGF0YSA9IHN1YnByb2Nlc3MuY2hlY2tfb3V0cHV0KFsnZ2l0JywgJ3Nob3cnLCAnJXM6JXMnICUgKE9MRF9SRUYsIHBhdGgpXSkKICAgIHdpdGggb3BlbihwYXRoLCAnd2InKSBhcyBmOgogICAgICAgIGYud3JpdGUoZGF0YSkKCiMgc2FuaXR5OiBleHBlY3QgYWNjMDEuLmFjYzMxCmZpbGVzID0gc29ydGVkKGYgZm9yIGYgaW4gb3MubGlzdGRpcignYXNzZXRzL2FjYycpIGlmIHJlLm1hdGNoKHInYWNjXGQrXC5qcGckJywgZikpCnByaW50KCd0b3RhbCBhY2MgZmlsZXM6JywgbGVuKGZpbGVzKSwgZmlsZXNbMF0sIGZpbGVzWy0xXSkKCiMgMykgcmVidWlsZCBpbmRleC5odG1sIGFjY2Vzc29yeSBpdGVtcyAtPiBhY2MwMS4uYWNjMzEKd2l0aCBvcGVuKCdpbmRleC5odG1sJywgZW5jb2Rpbmc9J3V0Zi04JykgYXMgZjoKICAgIGh0bWwgPSBmLnJlYWQoKQpodG1sLCBuY250ID0gcmUuc3VibigKICAgIHInPGRpdiBjbGFzcz0id2kgZmkgdmlzIiBkYXRhLWNhdD0iYWNjZXNzb3JpZXMiIGRhdGEtc3JjPSJhc3NldHMvYWNjL2FjY1xkK1wuanBnIi4qPzwvYnV0dG9uPlxzKjwvZGl2PlxzKicsCiAgICAnJywgaHRtbCwgZmxhZ3M9cmUuRE9UQUxMKQpwcmludCgncmVtb3ZlZCBvbGQgaXRlbXM6JywgbmNudCkKCml0ZW1zID0gJycKZm9yIGkgaW4gcmFuZ2UoMSwgMzIpOgogICAgbiA9ICclMDJkJyAlIGkKICAgIGl0ZW1zICs9ICgKICAgICAgICAnPGRpdiBjbGFzcz0id2kgZmkgdmlzIiBkYXRhLWNhdD0iYWNjZXNzb3JpZXMiIGRhdGEtc3JjPSJhc3NldHMvYWNjL2FjYyVzLmpwZyIgc3R5bGU9IiIgZHJhZ2dhYmxlPSJmYWxzZSI+XG4nCiAgICAgICAgJyAgICAgIDxpbWcgc3JjPSJhc3NldHMvYWNjL2FjYyVzLmpwZyIgYWx0PSJhY2MlcyIgbG9hZGluZz0ibGF6eSI+XG4nCiAgICAgICAgJyAgICAgIDxkaXYgY2xhc3M9IndpbyI+PGRpdiBjbGFzcz0id3QiIGNvbnRlbnRlZGl0YWJsZT0idHJ1ZSI+QWNjZXNzb3JpZXM8L2Rpdj48ZGl2IGNsYXNzPSJ3bSIgY29udGVudGVkaXRhYmxlPSJ0cnVlIj5XV0MgU3R1ZGlvIMK3IEpld2VscnkgRGVzaWduPC9kaXY+PC9kaXY+XG4nCiAgICAgICAgJyAgICAgIDxidXR0b24gY2xhc3M9ImRiIiBvbmNsaWNrPSJkaSh0aGlzLnBhcmVudEVsZW1lbnQpIj7inJU8L2J1dHRvbj5cbicKICAgICAgICAnICAgIDwvZGl2PlxuJwogICAgKSAlIChuLCBuLCBuKQoKbWFya2VyID0gJzwvZGl2PjwhLS0gL2dyaWQgLS0+JwppZiBtYXJrZXIgbm90IGluIGh0bWw6CiAgICByYWlzZSBTeXN0ZW1FeGl0KCdncmlkIG1hcmtlciBub3QgZm91bmQnKQpodG1sID0gaHRtbC5yZXBsYWNlKG1hcmtlciwgaXRlbXMgKyBtYXJrZXIpCndpdGggb3BlbignaW5kZXguaHRtbCcsICd3JywgZW5jb2Rpbmc9J3V0Zi04JykgYXMgZjoKICAgIGYud3JpdGUoaHRtbCkKcHJpbnQoJ2luc2VydGVkIDMxIGl0ZW1zOyBkb25lJykK' | base64 -d > acc_restore.py
+          python3 acc_restore.py
+      - name: Commit
+        run: |
+          rm -f acc_restore.py "$GITHUB_WORKSPACE/.github/workflows/restore-merge-accessories.yml"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Restore original 15 accessory images and keep 16 new ones (31 total)" -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_01PjSSdQAsR63RawwDoYaZLV" || { echo 'nothing to commit'; exit 0; }
+          git push
