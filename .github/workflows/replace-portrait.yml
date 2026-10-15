@@ -1,0 +1,45 @@
+name: Replace portrait
+on:
+  push:
+    paths:
+      - '.github/workflows/replace-portrait.yml'
+  workflow_dispatch: {}
+jobs:
+  portrait:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Install Pillow
+        run: pip install Pillow
+      - name: Download and convert
+        run: |
+          set -e
+          mkdir -p assets
+          curl -sSL "https://drive.usercontent.google.com/download?id=1DEuZRKYYTW5sKdfceAMSFTWwRgij5gMD&export=download&confirm=t" -o raw_portrait
+          echo "raw size: $(stat -c%s raw_portrait)"
+          file raw_portrait
+          python3 - <<'PY'
+          from PIL import Image, ImageOps
+          im = Image.open('raw_portrait')
+          im = ImageOps.exif_transpose(im).convert('RGB')
+          im.thumbnail((1000, 1000), Image.LANCZOS)
+          im.save('assets/portrait.jpg', 'JPEG', quality=85, optimize=True)
+          import os
+          print('portrait.jpg', os.path.getsize('assets/portrait.jpg'), im.size)
+          PY
+      - name: Patch index.html
+        run: |
+          echo 'aW1wb3J0IHJlCndpdGggb3BlbignaW5kZXguaHRtbCcsIGVuY29kaW5nPSd1dGYtOCcpIGFzIGY6CiAgICBodG1sID0gZi5yZWFkKCkKbmV3LCBuID0gcmUuc3VibigKICAgIHInc3JjPSJkYXRhOmltYWdlL2pwZWc7YmFzZTY0LFteIl0qIihccythbHQ9IuatpuWogeahgCIpJywKICAgIHInc3JjPSJhc3NldHMvcG9ydHJhaXQuanBnIlwxJywKICAgIGh0bWwpCmlmIG4gIT0gMToKICAgIHJhaXNlIFN5c3RlbUV4aXQoJ2V4cGVjdGVkIDEgcG9ydHJhaXQgaW1nLCBmb3VuZCAlZCcgJSBuKQp3aXRoIG9wZW4oJ2luZGV4Lmh0bWwnLCAndycsIGVuY29kaW5nPSd1dGYtOCcpIGFzIGY6CiAgICBmLndyaXRlKG5ldykKcHJpbnQoJ3BhdGNoZWQgcG9ydHJhaXQgaW1nOicsIG4pCg==' | base64 -d > patch_portrait.py
+          python3 patch_portrait.py
+      - name: Commit
+        run: |
+          rm -f raw_portrait patch_portrait.py "$GITHUB_WORKSPACE/.github/workflows/replace-portrait.yml"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Replace about-page portrait with new photo" -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>" -m "Claude-Session: https://claude.ai/code/session_01PjSSdQAsR63RawwDoYaZLV" || { echo 'nothing to commit'; exit 0; }
+          git push
